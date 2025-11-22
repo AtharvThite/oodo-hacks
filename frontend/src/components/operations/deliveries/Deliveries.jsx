@@ -42,9 +42,9 @@ const Deliveries = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       draft: { variant: 'secondary', text: 'Draft' },
-      confirmed: { variant: 'primary', text: 'Confirmed' },
-      shipped: { variant: 'warning', text: 'Shipped' },
-      delivered: { variant: 'success', text: 'Delivered' },
+      waiting: { variant: 'warning', text: 'Waiting' },
+      ready: { variant: 'primary', text: 'Ready' },
+      done: { variant: 'success', text: 'Done' },
       cancelled: { variant: 'danger', text: 'Cancelled' }
     }
     
@@ -97,9 +97,9 @@ const Deliveries = () => {
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
+              <option value="waiting">Waiting</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
               <option value="cancelled">Cancelled</option>
             </Select>
             <div className="flex items-center space-x-2">
@@ -145,7 +145,7 @@ const Deliveries = () => {
                 deliveries.map((delivery) => (
                   <tr key={delivery._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {delivery.deliveryNumber}
+                      {delivery.reference}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {delivery.customer?.name || 'N/A'}
@@ -164,7 +164,7 @@ const Deliveries = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
-                        to={`/deliveries/${delivery._id}`}
+                        to={`/operations/deliveries/${delivery._id}`}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         View
@@ -183,7 +183,7 @@ const Deliveries = () => {
                         Get started by creating a new delivery.
                       </p>
                       <div className="mt-6">
-                        <Link to="/deliveries/new">
+                        <Link to="/operations/deliveries/new">
                           <Button icon={PlusIcon}>
                             New Delivery
                           </Button>

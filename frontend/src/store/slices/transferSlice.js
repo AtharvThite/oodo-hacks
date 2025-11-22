@@ -101,12 +101,12 @@ const transferSlice = createSlice({
       })
       .addCase(fetchTransfers.fulfilled, (state, action) => {
         state.isLoading = false
-        state.items = action.payload.transfers || []
+        state.items = action.payload.data || []
         state.pagination = {
-          page: action.payload.page || 1,
-          limit: action.payload.limit || 20,
-          totalItems: action.payload.totalItems || 0,
-          totalPages: action.payload.totalPages || 0
+          page: action.payload.pagination?.current || 1,
+          limit: 20,
+          totalItems: action.payload.pagination?.totalItems || 0,
+          totalPages: action.payload.pagination?.total || 0
         }
       })
       .addCase(fetchTransfers.rejected, (state, action) => {
@@ -115,7 +115,7 @@ const transferSlice = createSlice({
       })
       
       .addCase(fetchTransfer.fulfilled, (state, action) => {
-        state.currentTransfer = action.payload.transfer
+        state.currentTransfer = action.payload.data
       })
       
       .addCase(createTransfer.pending, (state) => {
@@ -124,7 +124,7 @@ const transferSlice = createSlice({
       })
       .addCase(createTransfer.fulfilled, (state, action) => {
         state.isCreating = false
-        state.items.unshift(action.payload.transfer)
+        state.items.unshift(action.payload.data)
       })
       .addCase(createTransfer.rejected, (state, action) => {
         state.isCreating = false
@@ -137,11 +137,11 @@ const transferSlice = createSlice({
       })
       .addCase(updateTransfer.fulfilled, (state, action) => {
         state.isUpdating = false
-        const index = state.items.findIndex(item => item._id === action.payload.transfer._id)
+        const index = state.items.findIndex(item => item._id === action.payload.data._id)
         if (index !== -1) {
-          state.items[index] = action.payload.transfer
+          state.items[index] = action.payload.data
         }
-        state.currentTransfer = action.payload.transfer
+        state.currentTransfer = action.payload.data
       })
       .addCase(updateTransfer.rejected, (state, action) => {
         state.isUpdating = false

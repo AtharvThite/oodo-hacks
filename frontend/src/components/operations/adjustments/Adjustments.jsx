@@ -41,11 +41,11 @@ const Adjustments = () => {
 
   const getTypeBadge = (type) => {
     const typeConfig = {
-      increase: { variant: 'success', text: 'Increase' },
-      decrease: { variant: 'danger', text: 'Decrease' },
-      correction: { variant: 'warning', text: 'Correction' },
-      damaged: { variant: 'danger', text: 'Damaged' },
-      lost: { variant: 'danger', text: 'Lost' }
+      physical_count: { variant: 'info', text: 'Physical Count' },
+      damage: { variant: 'danger', text: 'Damage' },
+      loss: { variant: 'danger', text: 'Loss' },
+      found: { variant: 'success', text: 'Found' },
+      correction: { variant: 'warning', text: 'Correction' }
     }
     
     const config = typeConfig[type] || typeConfig.correction
@@ -96,11 +96,11 @@ const Adjustments = () => {
               }}
             >
               <option value="">All Types</option>
-              <option value="increase">Increase</option>
-              <option value="decrease">Decrease</option>
+              <option value="physical_count">Physical Count</option>
+              <option value="damage">Damage</option>
+              <option value="loss">Loss</option>
+              <option value="found">Found</option>
               <option value="correction">Correction</option>
-              <option value="damaged">Damaged</option>
-              <option value="lost">Lost</option>
             </Select>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700">
@@ -121,19 +121,19 @@ const Adjustments = () => {
                   Reference
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Warehouse
+                  Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantity
+                  Products
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -148,30 +148,25 @@ const Adjustments = () => {
                       {adjustment.reference}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {adjustment.product?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {adjustment.warehouse?.name || 'N/A'}
+                      {adjustment.location || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getTypeBadge(adjustment.adjustmentType)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className={`font-medium ${
-                        ['increase', 'correction'].includes(adjustment.adjustmentType) 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {['increase', 'correction'].includes(adjustment.adjustmentType) ? '+' : '-'}
-                        {Math.abs(adjustment.quantityChange)}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {adjustment.products?.length || 0} item(s)
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(adjustment.adjustmentDate).toLocaleDateString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge variant={adjustment.status === 'done' ? 'success' : 'secondary'}>
+                        {adjustment.status}
+                      </Badge>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
-                        to={`/adjustments/${adjustment._id}`}
+                        to={`/operations/adjustments/${adjustment._id}`}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         View
@@ -190,7 +185,7 @@ const Adjustments = () => {
                         Get started by creating a new adjustment.
                       </p>
                       <div className="mt-6">
-                        <Link to="/adjustments/new">
+                        <Link to="/operations/adjustments/new">
                           <Button icon={PlusIcon}>
                             New Adjustment
                           </Button>

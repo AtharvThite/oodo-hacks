@@ -2,6 +2,16 @@ const nodemailer = require('nodemailer');
 
 // Create reusable transporter
 const createTransporter = () => {
+  // In development, log email config (without password)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📧 Email Configuration:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_EMAIL,
+      hasPassword: !!process.env.SMTP_PASSWORD
+    });
+  }
+
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -79,6 +89,24 @@ const sendOTPEmail = async (email, otp, name = 'User', purpose = 'registration')
     return { success: true, message: 'OTP sent successfully' };
   } catch (error) {
     console.error('❌ Email sending error:', error);
+    
+    // Provide helpful error messages
+    if (error.code === 'EAUTH') {
+      console.error('\n⚠️  GMAIL AUTHENTICATION ERROR ⚠️');
+      console.error('Gmail requires an App-Specific Password for third-party apps.');
+      console.error('Steps to fix:');
+      console.error('1. Go to: https://myaccount.google.com/apppasswords');
+      console.error('2. Enable 2-Step Verification if not already enabled');
+      console.error('3. Generate an App Password for "Mail"');
+      console.error('4. Update SMTP_PASSWORD in .env with the 16-character code\n');
+    }
+    
+    // In development, log OTP to console as fallback
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔐 DEVELOPMENT MODE - OTP for', email, ':', otp);
+      console.log('⚠️  Use this OTP since email delivery failed\n');
+    }
+    
     return { success: false, message: 'Failed to send OTP email', error: error.message };
   }
 };

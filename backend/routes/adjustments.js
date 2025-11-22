@@ -25,7 +25,6 @@ router.get('/', auth, async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     const adjustments = await Adjustment.find(query)
-      .populate('location', 'name shortCode warehouse')
       .populate('products.product', 'name sku')
       .populate('createdBy responsible approvedBy', 'name email')
       .sort({ createdAt: -1 })
@@ -121,7 +120,7 @@ router.post('/', auth, authorize('admin', 'manager'), [
       createdBy: req.user.id
     });
 
-    await adjustment.populate('location products.product createdBy');
+    await adjustment.populate('products.product createdBy');
 
     res.status(201).json({
       success: true,
@@ -143,7 +142,6 @@ router.post('/', auth, authorize('admin', 'manager'), [
 router.get('/:id', auth, async (req, res) => {
   try {
     const adjustment = await Adjustment.findById(req.params.id)
-      .populate('location', 'name shortCode address warehouse')
       .populate('products.product', 'name sku unitOfMeasure')
       .populate('createdBy responsible approvedBy', 'name email');
 
@@ -205,7 +203,7 @@ router.put('/:id', auth, [
 
     Object.assign(adjustment, req.body);
     await adjustment.save();
-    await adjustment.populate('location products.product createdBy');
+    await adjustment.populate('products.product createdBy');
 
     res.status(200).json({
       success: true,

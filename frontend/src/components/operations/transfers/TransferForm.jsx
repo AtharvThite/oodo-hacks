@@ -25,18 +25,47 @@ const TransferForm = () => {
     register,
     handleSubmit,
     control,
+    watch,
     reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      items: [{ product: '', quantity: 0 }]
+      sourceLocation: '',
+      destinationLocation: '',
+      scheduledDate: '',
+      reference: '',
+      transferType: 'internal',
+      notes: '',
+      products: [{ product: '', quantity: 0 }]
     }
   })
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'items'
+    name: 'products'
   })
+
+  const watchedSourceWarehouse = watch('sourceWarehouse')
+  const watchedDestWarehouse = watch('destinationWarehouse')
+
+  // Mock locations based on selected warehouse
+  const getSourceLocations = () => {
+    if (!watchedSourceWarehouse) return []
+    return [
+      { id: `${watchedSourceWarehouse}_storage`, name: 'Storage' },
+      { id: `${watchedSourceWarehouse}_picking`, name: 'Picking' },
+      { id: `${watchedSourceWarehouse}_packing`, name: 'Packing' }
+    ]
+  }
+
+  const getDestLocations = () => {
+    if (!watchedDestWarehouse) return []
+    return [
+      { id: `${watchedDestWarehouse}_storage`, name: 'Storage' },
+      { id: `${watchedDestWarehouse}_receiving`, name: 'Receiving' },
+      { id: `${watchedDestWarehouse}_quality`, name: 'Quality Check' }
+    ]
+  }
 
   useEffect(() => {
     dispatch(fetchWarehouses())
@@ -49,10 +78,16 @@ const TransferForm = () => {
   const onSubmit = async (data) => {
     try {
       const formattedData = {
-        ...data,
-        items: data.items.map(item => ({
-          ...item,
-          quantity: parseFloat(item.quantity)
+        reference: data.reference,
+        sourceLocation: data.sourceLocation,
+        destinationLocation: data.destinationLocation,
+        scheduledDate: data.scheduledDate,
+        transferType: data.transferType,
+        notes: data.notes,
+        products: data.products.map(item => ({
+          product: item.product,
+          quantity: parseFloat(item.quantity),
+          notes: item.notes || ''
         }))
       }
 
@@ -86,12 +121,8 @@ const TransferForm = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
-                label="From Warehouse"
-                required
-                error={errors.fromWarehouse?.message}
-                {...register('fromWarehouse', {
-                  required: 'From warehouse is required'
-                })}
+                label="Source Warehouse (for location)"
+                {...register('sourceWarehouse')}
               >
                 <option value="">Select warehouse</option>
                 {Array.isArray(warehouses) && warehouses.map((warehouse) => (
@@ -102,12 +133,24 @@ const TransferForm = () => {
               </Select>
 
               <Select
-                label="To Warehouse"
+                label="Source Location"
                 required
-                error={errors.toWarehouse?.message}
-                {...register('toWarehouse', {
-                  required: 'To warehouse is required'
+                error={errors.sourceLocation?.message}
+                {...register('sourceLocation', {
+                  required: 'Source location is required'
                 })}
+              >
+                <option value="">Select location</option>
+                {getSourceLocations().map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                label="Destination Warehouse (for location)"
+                {...register('destinationWarehouse')}
               >
                 <option value="">Select warehouse</option>
                 {Array.isArray(warehouses) && warehouses.map((warehouse) => (
@@ -117,20 +160,58 @@ const TransferForm = () => {
                 ))}
               </Select>
 
+              <Select
+                label="Destination Location"
+                required
+                error={errors.destinationLocation?.message}
+                {...register('destinationLocation', {
+                  required: 'Destination location is required'
+                })}
+              >
+                <option value="">Select location</option>
+                {getDestLocations().map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </Select>
+
               <Input
-                label="Transfer Date"
+                label="Scheduled Date"
                 type="date"
                 required
-                error={errors.transferDate?.message}
-                {...register('transferDate', {
-                  required: 'Transfer date is required'
+                error={errors.scheduledDate?.message}
+                {...register('scheduledDate', {
+                  required: 'Scheduled date is required'
                 })}
               />
 
               <Input
                 label="Reference"
+                required
                 error={errors.reference?.message}
-                {...register('reference')}
+                {...register('reference', {
+                  required: 'Reference is required'
+                })}
+              />
+
+              <Select
+                label="Transfer Type"
+                {...register('transferType')}
+              >
+                <option value="internal">Internal</option>
+                <option value="inter-warehouse">Inter-warehouse</option>
+              </Select>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notes
+              </label>
+              <textarea
+                rows="3"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                {...register('notes')}
               />
             </div>
           </div>
@@ -140,7 +221,7 @@ const TransferForm = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-medium text-gray-900">
-                Items
+                Products
               </h3>
               <Button
                 type="button"
@@ -148,7 +229,7 @@ const TransferForm = () => {
                 icon={PlusIcon}
                 onClick={() => append({ product: '', quantity: 0 })}
               >
-                Add Item
+                Add Product
               </Button>
             </div>
 
@@ -156,9 +237,11 @@ const TransferForm = () => {
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end p-4 border border-gray-200 rounded-lg">
                   <Input
-                    label="Product Name"
+                    label="Product SKU"
                     required
-                    {...register(`items.${index}.product`, {
+                    placeholder="e.g., IPH15PM256"
+                    error={errors.products?.[index]?.product?.message}
+                    {...register(`products.${index}.product`, {
                       required: 'Product is required'
                     })}
                   />
@@ -168,8 +251,10 @@ const TransferForm = () => {
                     type="number"
                     min="1"
                     required
-                    {...register(`items.${index}.quantity`, {
-                      required: 'Quantity is required'
+                    error={errors.products?.[index]?.quantity?.message}
+                    {...register(`products.${index}.quantity`, {
+                      required: 'Quantity is required',
+                      min: { value: 1, message: 'Quantity must be at least 1' }
                     })}
                   />
 

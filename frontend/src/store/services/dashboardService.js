@@ -23,7 +23,7 @@ const dashboardService = {
   getMoveHistory: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString()
     const response = await api.get(`/dashboard/move-history?${queryString}`)
-    return response.data.data
+    return response.data
   },
 }
 

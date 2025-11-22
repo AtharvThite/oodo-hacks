@@ -22,7 +22,6 @@ router.get('/', auth, async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     const transfers = await Transfer.find(query)
-      .populate('sourceLocation destinationLocation', 'name shortCode warehouse')
       .populate('products.product', 'name sku')
       .populate('createdBy responsible', 'name email')
       .sort({ createdAt: -1 })
@@ -117,7 +116,7 @@ router.post('/', auth, [
       createdBy: req.user.id
     });
 
-    await transfer.populate('sourceLocation destinationLocation products.product createdBy');
+    await transfer.populate('products.product createdBy');
 
     res.status(201).json({
       success: true,
@@ -139,7 +138,6 @@ router.post('/', auth, [
 router.get('/:id', auth, async (req, res) => {
   try {
     const transfer = await Transfer.findById(req.params.id)
-      .populate('sourceLocation destinationLocation', 'name shortCode address warehouse')
       .populate('products.product', 'name sku unitOfMeasure')
       .populate('createdBy responsible', 'name email');
 
@@ -203,7 +201,7 @@ router.put('/:id', auth, [
 
     Object.assign(transfer, req.body);
     await transfer.save();
-    await transfer.populate('sourceLocation destinationLocation products.product createdBy');
+    await transfer.populate('products.product createdBy');
 
     res.status(200).json({
       success: true,

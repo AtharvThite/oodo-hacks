@@ -3,6 +3,7 @@ const Product = require('../models/Product');
 const Receipt = require('../models/Receipt');
 const Delivery = require('../models/Delivery');
 const Transfer = require('../models/Transfer');
+const StockMove = require('../models/StockMove');
 const { auth } = require('../middleware/auth');
 const { calculateCurrentStock } = require('../services/stockCalculationService');
 
@@ -204,7 +205,16 @@ router.get('/move-history', auth, async (req, res) => {
 
     const moves = await StockMove.find(query)
       .populate('product', 'name sku')
-      .populate('sourceLocation destinationLocation', 'name shortCode warehouse')
+      .populate({
+        path: 'sourceLocation',
+        select: 'name code warehouse',
+        strictPopulate: false
+      })
+      .populate({
+        path: 'destinationLocation',
+        select: 'name code warehouse',
+        strictPopulate: false
+      })
       .populate('createdBy', 'name email')
       .sort({ completedDate: -1, createdAt: -1 })
       .limit(limit * 1)

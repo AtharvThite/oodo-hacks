@@ -101,12 +101,12 @@ const deliverySlice = createSlice({
       })
       .addCase(fetchDeliveries.fulfilled, (state, action) => {
         state.isLoading = false
-        state.items = action.payload.deliveries || []
+        state.items = action.payload.data || []
         state.pagination = {
-          page: action.payload.page || 1,
-          limit: action.payload.limit || 20,
-          totalItems: action.payload.totalItems || 0,
-          totalPages: action.payload.totalPages || 0
+          page: action.payload.pagination?.current || 1,
+          limit: 20,
+          totalItems: action.payload.pagination?.totalItems || 0,
+          totalPages: action.payload.pagination?.total || 0
         }
       })
       .addCase(fetchDeliveries.rejected, (state, action) => {
@@ -115,7 +115,7 @@ const deliverySlice = createSlice({
       })
       
       .addCase(fetchDelivery.fulfilled, (state, action) => {
-        state.currentDelivery = action.payload.delivery
+        state.currentDelivery = action.payload.data
       })
       
       .addCase(createDelivery.pending, (state) => {
@@ -124,7 +124,7 @@ const deliverySlice = createSlice({
       })
       .addCase(createDelivery.fulfilled, (state, action) => {
         state.isCreating = false
-        state.items.unshift(action.payload.delivery)
+        state.items.unshift(action.payload.data)
       })
       .addCase(createDelivery.rejected, (state, action) => {
         state.isCreating = false
@@ -137,11 +137,11 @@ const deliverySlice = createSlice({
       })
       .addCase(updateDelivery.fulfilled, (state, action) => {
         state.isUpdating = false
-        const index = state.items.findIndex(item => item._id === action.payload.delivery._id)
+        const index = state.items.findIndex(item => item._id === action.payload.data._id)
         if (index !== -1) {
-          state.items[index] = action.payload.delivery
+          state.items[index] = action.payload.data
         }
-        state.currentDelivery = action.payload.delivery
+        state.currentDelivery = action.payload.data
       })
       .addCase(updateDelivery.rejected, (state, action) => {
         state.isUpdating = false

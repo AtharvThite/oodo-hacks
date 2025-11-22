@@ -42,9 +42,9 @@ const Transfers = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       draft: { variant: 'secondary', text: 'Draft' },
-      confirmed: { variant: 'primary', text: 'Confirmed' },
-      in_transit: { variant: 'warning', text: 'In Transit' },
-      received: { variant: 'success', text: 'Received' },
+      waiting: { variant: 'warning', text: 'Waiting' },
+      ready: { variant: 'info', text: 'Ready' },
+      done: { variant: 'success', text: 'Done' },
       cancelled: { variant: 'danger', text: 'Cancelled' }
     }
     
@@ -97,9 +97,9 @@ const Transfers = () => {
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="in_transit">In Transit</option>
-              <option value="received">Received</option>
+              <option value="waiting">Waiting</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
               <option value="cancelled">Cancelled</option>
             </Select>
             <div className="flex items-center space-x-2">
@@ -118,22 +118,25 @@ const Transfers = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Transfer #
+                  Reference
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  From Warehouse
+                  From Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  To Warehouse
+                  To Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Transfer Date
+                  Scheduled Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Items Count
+                  Products
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -145,26 +148,31 @@ const Transfers = () => {
                 transfers.map((transfer) => (
                   <tr key={transfer._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {transfer.transferNumber}
+                      {transfer.reference}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {transfer.fromWarehouse?.name || 'N/A'}
+                      {transfer.sourceLocation || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {transfer.toWarehouse?.name || 'N/A'}
+                      {transfer.destinationLocation || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <Badge variant={transfer.transferType === 'internal' ? 'info' : 'warning'}>
+                        {transfer.transferType}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(transfer.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(transfer.transferDate).toLocaleDateString()}
+                      {new Date(transfer.scheduledDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transfer.items?.length || 0}
+                      {transfer.products?.length || 0} item(s)
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
-                        to={`/transfers/${transfer._id}`}
+                        to={`/operations/transfers/${transfer._id}`}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         View
@@ -174,7 +182,7 @@ const Transfers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="8" className="px-6 py-12 text-center">
                     <div className="text-center">
                       <h3 className="mt-2 text-sm font-medium text-gray-900">
                         No transfers found
@@ -183,7 +191,7 @@ const Transfers = () => {
                         Get started by creating a new transfer.
                       </p>
                       <div className="mt-6">
-                        <Link to="/transfers/new">
+                        <Link to="/operations/transfers/new">
                           <Button icon={PlusIcon}>
                             New Transfer
                           </Button>
