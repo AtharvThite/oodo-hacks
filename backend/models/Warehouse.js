@@ -7,13 +7,13 @@ const warehouseSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Warehouse name cannot exceed 100 characters']
   },
-  code: {
+  shortCode: {
     type: String,
-    required: [true, 'Warehouse code is required'],
+    required: [true, 'Warehouse short code is required'],
     unique: true,
     uppercase: true,
     trim: true,
-    maxlength: [10, 'Warehouse code cannot exceed 10 characters']
+    maxlength: [10, 'Warehouse short code cannot exceed 10 characters']
   },
   address: {
     type: String,

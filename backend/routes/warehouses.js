@@ -73,14 +73,14 @@ router.post('/', auth, [
     .withMessage('Warehouse name is required')
     .isLength({ max: 100 })
     .withMessage('Name cannot exceed 100 characters'),
-  body('code')
+  body('shortCode')
     .trim()
     .notEmpty()
-    .withMessage('Warehouse code is required')
+    .withMessage('Warehouse short code is required')
     .isLength({ max: 10 })
-    .withMessage('Code cannot exceed 10 characters')
+    .withMessage('Short code cannot exceed 10 characters')
     .matches(/^[A-Z0-9-_]+$/)
-    .withMessage('Code can only contain uppercase letters, numbers, hyphens, and underscores')
+    .withMessage('Short code can only contain uppercase letters, numbers, hyphens, and underscores')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -94,7 +94,7 @@ router.post('/', auth, [
 
     const warehouse = await Warehouse.create({
       ...req.body,
-      code: req.body.code.toUpperCase(),
+      shortCode: req.body.shortCode.toUpperCase(),
       createdBy: req.user.id
     });
 
@@ -110,7 +110,7 @@ router.post('/', auth, [
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Warehouse with this code already exists'
+        message: 'Warehouse with this short code already exists'
       });
     }
     res.status(500).json({
@@ -131,15 +131,15 @@ router.put('/:id', auth, authorize('admin', 'manager'), [
     .withMessage('Warehouse name cannot be empty')
     .isLength({ max: 100 })
     .withMessage('Name cannot exceed 100 characters'),
-  body('code')
+  body('shortCode')
     .optional()
     .trim()
     .notEmpty()
-    .withMessage('Warehouse code cannot be empty')
+    .withMessage('Warehouse short code cannot be empty')
     .isLength({ max: 10 })
-    .withMessage('Code cannot exceed 10 characters')
+    .withMessage('Short code cannot exceed 10 characters')
     .matches(/^[A-Z0-9-_]+$/)
-    .withMessage('Code can only contain uppercase letters, numbers, hyphens, and underscores')
+    .withMessage('Short code can only contain uppercase letters, numbers, hyphens, and underscores')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -162,8 +162,8 @@ router.put('/:id', auth, authorize('admin', 'manager'), [
 
     // Update fields
     const updateData = { ...req.body };
-    if (updateData.code) {
-      updateData.code = updateData.code.toUpperCase();
+    if (updateData.shortCode) {
+      updateData.shortCode = updateData.shortCode.toUpperCase();
     }
 
     warehouse = await Warehouse.findByIdAndUpdate(
@@ -182,7 +182,7 @@ router.put('/:id', auth, authorize('admin', 'manager'), [
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Warehouse with this code already exists'
+        message: 'Warehouse with this short code already exists'
       });
     }
     res.status(500).json({
@@ -230,7 +230,7 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 router.get('/locations/all', auth, async (req, res) => {
   try {
     const locations = await Location.find({ isActive: true })
-      .populate('warehouse', 'name code')
+      .populate('warehouse', 'name shortCode')
       .populate('createdBy', 'name email')
       .sort({ 'warehouse.name': 1, name: 1 });
 
@@ -293,7 +293,7 @@ router.post('/:warehouseId/locations', auth, authorize('admin', 'manager'), [
       createdBy: req.user.id
     });
 
-    await location.populate('warehouse createdBy', 'name code');
+    await location.populate('warehouse createdBy', 'name shortCode');
 
     res.status(201).json({
       success: true,
