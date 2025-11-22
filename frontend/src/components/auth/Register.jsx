@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { registerUser, clearError } from '../../store/slices/authSlice'
+import authService from '../../store/services/authService'
 import Button from '../common/Button'
 import Input from '../common/Input'
 import Select from '../common/Select'
@@ -15,7 +16,9 @@ import { useTheme } from '../../context/ThemeContext'
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isOTPVerified, setIsOTPVerified] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
   const { isLoading, error, isAuthenticated } = useSelector((state) => state.auth)
   const { theme } = useTheme()
@@ -25,10 +28,12 @@ const Register = () => {
     handleSubmit,
     watch,
     formState: { errors },
+    setValue,
   } = useForm({
     mode: 'onChange',
     defaultValues: {
-      role: 'staff'
+      role: 'staff',
+      email: location.state?.email || ''
     }
   })
 
@@ -41,6 +46,13 @@ const Register = () => {
   }, [isAuthenticated, navigate])
 
   useEffect(() => {
+    if (location.state?.verified) {
+      setIsOTPVerified(true)
+      setValue('email', location.state.email)
+    }
+  }, [location.state, setValue])
+
+  useEffect(() => {
     if (error) {
       toast.error(error)
       dispatch(clearError())
@@ -48,8 +60,13 @@ const Register = () => {
   }, [error, dispatch])
 
   const onSubmit = async (data) => {
-    const { confirmPassword, ...registerData } = data
-    
+    // Check if email is OTP verified
+    if (!isOTPVerified) {
+      toast.error('Please verify your email with OTP first')
+      navigate('/verify-email', { state: { email: data.email } })
+      return
+    }
+
     try {
       const result = await dispatch(registerUser(data)).unwrap()
       toast.success('Registration successful! Please login.')
@@ -101,6 +118,29 @@ const Register = () => {
 
           {/* Register Form */}
           <div className="rounded-3xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 p-8 shadow-xl backdrop-blur-sm">
+            {!isOTPVerified && (
+              <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p className="text-sm text-blue-700 dark:text-blue-200">
+                  <strong>Step 1:</strong> Verify your email first{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/verify-email')}
+                    className="font-medium underline hover:no-underline"
+                  >
+                    Start verification
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {isOTPVerified && (
+              <div className="mb-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <p className="text-sm text-green-700 dark:text-green-200">
+                  ✅ Email verified! You can now complete your registration.
+                </p>
+              </div>
+            )}
+
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <Input
@@ -127,6 +167,7 @@ const Register = () => {
                 autoComplete="email"
                 placeholder="Enter your email address"
                 required
+                disabled={isOTPVerified}
                 error={errors.email?.message}
                 {...register('email', {
                   required: 'Email is required',

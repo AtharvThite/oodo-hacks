@@ -5,6 +5,8 @@ const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { sendTokenResponse } = require('../utils/jwt');
 const { sendOTPEmail } = require('../utils/sendEmail');
+const { sendOTP, verifyOTP, isEmailVerified, clearOTP, resendOTP } = require('../services/otpService');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -54,6 +56,16 @@ router.post('/register', [
       });
     }
 
+    // Check if email has been verified via OTP
+    const emailVerified = await isEmailVerified(email, 'registration');
+    if (!emailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please verify your email with OTP first',
+        requiresOTP: true
+      });
+    }
+
     // Create user
     const user = await User.create({
       name,
@@ -65,6 +77,9 @@ router.post('/register', [
     // Update last login
     user.lastLogin = new Date();
     await user.save();
+
+    // Clear OTP after successful registration
+    await clearOTP(email, 'registration');
 
     sendTokenResponse(user, 201, res, 'User registered successfully');
   } catch (error) {
@@ -422,6 +437,257 @@ router.post('/logout', auth, (req, res) => {
     success: true,
     message: 'User logged out successfully'
   });
+});
+
+// ============= OTP ENDPOINTS =============
+
+// @desc    Send OTP to email for registration
+// @route   POST /api/auth/send-otp
+// @access  Public
+router.post('/send-otp', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, purpose = 'registration' } = req.body;
+
+    // Check if user already exists (for registration)
+    if (purpose === 'registration') {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'User already exists with this email'
+        });
+      }
+    }
+
+    // Check if user exists (for forgot password)
+    if (purpose === 'forgot-password') {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found with this email'
+        });
+      }
+    }
+
+    const result = await sendOTP(email, purpose);
+    
+    if (!result.success) {
+      return res.status(429).json(result);
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to send OTP'
+    });
+  }
+});
+
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+router.post('/verify-otp', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .matches(/^\d+$/)
+    .withMessage('OTP must be 6 digits')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, otp, purpose = 'registration' } = req.body;
+
+    const result = await verifyOTP(email, otp, purpose);
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to verify OTP'
+    });
+  }
+});
+
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+router.post('/resend-otp', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, purpose = 'registration' } = req.body;
+    const result = await resendOTP(email, purpose);
+
+    if (!result.success) {
+      return res.status(429).json(result);
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to resend OTP'
+    });
+  }
+});
+
+// @desc    Forgot Password - Send Reset Link
+// @route   POST /api/auth/forgot-password
+// @access  Public
+router.post('/forgot-password', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists (security best practice)
+      return res.status(200).json({
+        success: true,
+        message: 'If a user exists with this email, you will receive a password reset OTP'
+      });
+    }
+
+    // Send OTP for password reset
+    const result = await sendOTP(email, 'forgot-password');
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset OTP sent to your email',
+      expiresIn: result.expiresIn
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to process forgot password'
+    });
+  }
+});
+
+// @desc    Reset Password with OTP
+// @route   POST /api/auth/reset-password
+// @access  Public
+router.post('/reset-password', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .matches(/^\d+$/)
+    .withMessage('OTP must be 6 digits'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, otp, newPassword } = req.body;
+
+    // Verify OTP
+    const otpResult = await verifyOTP(email, otp, 'forgot-password');
+    if (!otpResult.success) {
+      return res.status(400).json(otpResult);
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    // Clear OTP
+    await clearOTP(email, 'forgot-password');
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully. You can now login with your new password.'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to reset password'
+    });
+  }
 });
 
 module.exports = router;

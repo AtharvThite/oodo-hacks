@@ -61,6 +61,24 @@ const authService = {
     localStorage.removeItem('token')
     return response.data
   },
+
+  // Send OTP
+  sendOTP: async (email, purpose = 'registration') => {
+    const response = await api.post('/auth/send-otp', { email, purpose })
+    return response.data
+  },
+
+  // Verify OTP
+  verifyOTP: async (email, otp, purpose = 'registration') => {
+    const response = await api.post('/auth/verify-otp', { email, otp, purpose })
+    return response.data
+  },
+
+  // Resend OTP
+  resendOTP: async (email, purpose = 'registration') => {
+    const response = await api.post('/auth/resend-otp', { email, purpose })
+    return response.data
+  },
 }
 
 export default authService

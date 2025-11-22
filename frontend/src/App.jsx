@@ -6,6 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import Layout from './components/layout/Layout'
 import Login from './components/auth/Login'
 import Register from './components/auth/Register'
+import OTPVerification from './components/auth/OTPVerification'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
 import Dashboard from './components/dashboard/Dashboard'
@@ -66,6 +67,10 @@ function App() {
         <Route
           path="/register"
           element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
+          path="/verify-email"
+          element={!isAuthenticated ? <OTPVerification /> : <Navigate to="/dashboard" replace />}
         />
         <Route
           path="/forgot-password"
