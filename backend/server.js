@@ -71,6 +71,14 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => {
   console.log('Connected to MongoDB');
+  
+  // Initialize OTP cleanup (run every hour)
+  const OTPService = require('./services/otpService');
+  setInterval(async () => {
+    await OTPService.cleanupExpiredOTPs();
+  }, 60 * 60 * 1000); // 1 hour
+  
+  console.log('✅ OTP service initialized');
 })
 .catch((error) => {
   console.error('MongoDB connection error:', error);

@@ -8,6 +8,7 @@ import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
+import OTPVerification from './components/auth/OTPVerification'
 import Dashboard from './components/dashboard/Dashboard'
 import Products from './components/products/Products'
 import ProductForm from './components/products/ProductForm'
@@ -74,6 +75,10 @@ function App() {
         <Route
           path="/reset-password"
           element={!isAuthenticated ? <ResetPassword /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
+          path="/verify-otp"
+          element={!isAuthenticated ? <OTPVerification /> : <Navigate to="/dashboard" replace />}
         />
 
         {/* Protected Routes */}
