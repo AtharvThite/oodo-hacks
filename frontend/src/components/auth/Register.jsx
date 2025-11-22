@@ -143,14 +143,14 @@ const Register = () => {
                 label="Role"
                 required
                 error={errors.role?.message}
+                disabled
                 {...register('role', {
                   required: 'Role is required',
                 })}
               >
                 <option value="staff">Staff</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
               </Select>
+              <p className="text-xs text-slate-500 mt-1">New users join as Staff. Admin can change roles later.</p>
             </div>
 
             <div>
