@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { Toaster } from 'react-hot-toast'
 import { store, persistor } from './store/store'
+import { ThemeProvider } from './context/ThemeContext'
 import App from './App'
 import './index.css'
 
@@ -25,31 +26,33 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <App />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  theme: {
-                    primary: '#4aed88',
-                  },
-                },
-                error: {
+          <ThemeProvider>
+            <BrowserRouter>
+              <App />
+              <Toaster
+                position="top-right"
+                toastOptions={{
                   duration: 4000,
-                  theme: {
-                    primary: 'red',
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
                   },
-                },
-              }}
-            />
-          </BrowserRouter>
+                  success: {
+                    duration: 3000,
+                    theme: {
+                      primary: '#4aed88',
+                    },
+                  },
+                  error: {
+                    duration: 4000,
+                    theme: {
+                      primary: 'red',
+                    },
+                  },
+                }}
+              />
+            </BrowserRouter>
+          </ThemeProvider>
         </QueryClientProvider>
       </PersistGate>
     </Provider>

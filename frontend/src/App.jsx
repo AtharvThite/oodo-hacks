@@ -29,6 +29,7 @@ import WarehouseForm from './components/warehouses/WarehouseForm'
 import Profile from './components/profile/Profile'
 import Settings from './components/settings/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
+import LandingPage from './components/landing/LandingPage'
 
 function App() {
   const dispatch = useDispatch()
@@ -55,6 +56,10 @@ function App() {
 
         {/* Public Routes */}
         <Route
+          path="/"
+          element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
           path="/login"
           element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />}
         />
@@ -78,8 +83,6 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Routes>
-
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<Dashboard />} />
 
                   {/* Products */}
