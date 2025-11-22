@@ -18,8 +18,15 @@ const Login = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm()
+  } = useForm({
+    mode: 'onChange'
+  })
+
+  // Watch form values for debugging
+  const watchedValues = watch()
+  console.log('Current form values:', watchedValues)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -35,13 +42,22 @@ const Login = () => {
   }, [error, dispatch])
 
   const onSubmit = async (data) => {
+    console.log('=== LOGIN FORM SUBMISSION START ===')
+    console.log('Login form submitted with data:', data)
+    console.log('Current form state:', { errors, watchedValues })
     try {
-      await dispatch(loginUser(data)).unwrap()
+      const result = await dispatch(loginUser(data)).unwrap()
       toast.success('Login successful!')
       navigate('/dashboard')
     } catch (error) {
-      // Error is handled in the slice
+      toast.error(error || 'Login failed')
     }
+  }
+
+  const handleFormSubmit = (e) => {
+    console.log('Form submit event triggered')
+    console.log('Event:', e)
+    handleSubmit(onSubmit)(e)
   }
 
   return (
@@ -68,12 +84,13 @@ const Login = () => {
 
         {/* Login Form */}
         <Card>
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-6" onSubmit={handleFormSubmit}>
             <div>
               <Input
                 label="Email address"
                 type="email"
                 autoComplete="email"
+                placeholder="Enter your email address"
                 required
                 error={errors.email?.message}
                 {...register('email', {
@@ -92,6 +109,7 @@ const Login = () => {
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
+                  placeholder="Enter your password"
                   required
                   error={errors.password?.message}
                   {...register('password', {
@@ -129,6 +147,10 @@ const Login = () => {
                 className="w-full"
                 isLoading={isLoading}
                 disabled={isLoading}
+                onClick={(e) => {
+                  console.log('Login submit button clicked!')
+                  console.log('Button event:', e)
+                }}
               >
                 Sign in
               </Button>

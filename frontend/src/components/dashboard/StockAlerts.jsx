@@ -9,7 +9,10 @@ import Button from '../common/Button'
 const StockAlerts = () => {
   const { alerts } = useSelector((state) => state.dashboard)
 
-  if (!alerts || alerts.length === 0) {
+  // Ensure alerts is always an array
+  const safeAlerts = Array.isArray(alerts) ? alerts : []
+
+  if (safeAlerts.length === 0) {
     return null
   }
 
@@ -20,7 +23,7 @@ const StockAlerts = () => {
           <div className="flex items-center">
             <ExclamationTriangleIcon className="h-5 w-5 text-warning-500 mr-2" />
             <h3 className="text-lg font-medium text-gray-900">
-              Stock Alerts ({alerts.length})
+              Stock Alerts ({safeAlerts.length})
             </h3>
           </div>
           <Link to="/products?filter=low-stock">
@@ -31,7 +34,7 @@ const StockAlerts = () => {
         </div>
         
         <div className="space-y-3">
-          {alerts.slice(0, 3).map((alert) => (
+          {safeAlerts.slice(0, 3).map((alert) => (
             <div key={alert.product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">

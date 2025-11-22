@@ -23,7 +23,7 @@ const Register = () => {
     watch,
     formState: { errors },
   } = useForm({
-    mode: 'onTouched',
+    mode: 'onChange',
     defaultValues: {
       role: 'staff'
     }
@@ -45,20 +45,18 @@ const Register = () => {
   }, [error, dispatch])
 
   const onSubmit = async (data) => {
-    console.log('Form submitted with data:', data)
     const { confirmPassword, ...registerData } = data
-    console.log('Sending registration data:', registerData)
     
     try {
-      const result = await dispatch(registerUser(registerData)).unwrap()
-      console.log('Registration successful:', result)
-      toast.success('Registration successful!')
+      const result = await dispatch(registerUser(data)).unwrap()
+      toast.success('Registration successful! Please login.')
       navigate('/login')
     } catch (error) {
-      console.error('Registration error:', error)
       toast.error(error || 'Registration failed')
     }
   }
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -90,6 +88,7 @@ const Register = () => {
                 label="Full Name"
                 type="text"
                 autoComplete="name"
+                placeholder="Enter your full name"
                 required
                 error={errors.name?.message}
                 {...register('name', {
@@ -107,6 +106,7 @@ const Register = () => {
                 label="Email address"
                 type="email"
                 autoComplete="email"
+                placeholder="Enter your email address"
                 required
                 error={errors.email?.message}
                 {...register('email', {
@@ -140,6 +140,7 @@ const Register = () => {
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
+                  placeholder="Create a strong password"
                   required
                   error={errors.password?.message}
                   {...register('password', {
@@ -174,6 +175,7 @@ const Register = () => {
                   label="Confirm Password"
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
+                  placeholder="Confirm your password"
                   required
                   error={errors.confirmPassword?.message}
                   {...register('confirmPassword', {
@@ -202,6 +204,10 @@ const Register = () => {
                 className="w-full"
                 isLoading={isLoading}
                 disabled={isLoading}
+                onClick={(e) => {
+                  console.log('Register submit button clicked!')
+                  console.log('Button event:', e)
+                }}
               >
                 Create Account
               </Button>
