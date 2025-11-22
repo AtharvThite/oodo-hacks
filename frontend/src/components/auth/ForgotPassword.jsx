@@ -8,11 +8,14 @@ import Button from '../common/Button'
 import Input from '../common/Input'
 import Card from '../common/Card'
 import { CheckCircleIcon } from '@heroicons/react/24/solid'
+import { Package, ArrowLeft, CheckCircle } from 'lucide-react'
+import { useTheme } from '../../context/ThemeContext'
 
 const ForgotPassword = () => {
   const [isEmailSent, setIsEmailSent] = useState(false)
   const dispatch = useDispatch()
   const { isLoading, error } = useSelector((state) => state.auth)
+  const { theme } = useTheme()
 
   const {
     register,
@@ -40,66 +43,89 @@ const ForgotPassword = () => {
 
   if (isEmailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-success-100">
-              <CheckCircleIcon className="h-8 w-8 text-success-600" />
-            </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Check your email
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent password reset instructions to{' '}
-              <span className="font-medium">{getValues('email')}</span>
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 dark:bg-green-500/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
 
-          <Card>
-            <div className="text-center space-y-4">
-              <p className="text-sm text-gray-500">
+        <div className="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md w-full">
+            <div className="text-center mb-8">
+              <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-2xl shadow-green-500/30 mb-6">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                Check your email
+              </h2>
+              <p className="mt-3 text-slate-600 dark:text-slate-400">
+                We've sent password reset instructions to
+              </p>
+              <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{getValues('email')}</p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 p-8 shadow-xl backdrop-blur-sm">
+              <p className="text-sm text-slate-600 dark:text-slate-400 text-center mb-6">
                 Didn't receive the email? Check your spam folder or try again.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="space-y-3">
                 <Button
                   variant="outline"
                   onClick={() => setIsEmailSent(false)}
-                  className="flex-1"
+                  className="w-full"
                 >
                   Try again
                 </Button>
-                <Link to="/login" className="flex-1">
+                <Link to="/login" className="block">
                   <Button variant="primary" className="w-full">
                     Back to login
                   </Button>
                 </Link>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100">
-            <span className="text-primary-600 font-bold text-xl">SM</span>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Forgot your password?
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you instructions to reset your password.
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 dark:bg-primary-500/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
 
-        {/* Forgot Password Form */}
-        <Card>
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <div className="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <Link 
+            to="/login" 
+            className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Login
+          </Link>
+
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg shadow-primary-500/50">
+                <Package className="h-7 w-7 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-xl font-bold text-slate-900 dark:text-white">StockMaster</div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">Inventory Management</div>
+              </div>
+            </Link>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Forgot Password?
+            </h2>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">
+              Enter your email and we'll send you reset instructions
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 p-8 shadow-xl backdrop-blur-sm">
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <Input
                 label="Email address"
@@ -131,13 +157,14 @@ const ForgotPassword = () => {
             <div className="text-center">
               <Link
                 to="/login"
-                className="font-medium text-primary-600 hover:text-primary-500"
+                className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
               >
-                Back to login
+                Remember your password? Sign in
               </Link>
             </div>
           </form>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
