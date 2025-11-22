@@ -103,7 +103,7 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardKPIs.fulfilled, (state, action) => {
         state.isLoading = false
-        state.kpis = action.payload
+        state.kpis = action.payload.data || action.payload
       })
       .addCase(fetchDashboardKPIs.rejected, (state, action) => {
         state.isLoading = false
@@ -111,11 +111,11 @@ const dashboardSlice = createSlice({
       })
       // Fetch recent operations
       .addCase(fetchRecentOperations.fulfilled, (state, action) => {
-        state.recentOperations = action.payload
+        state.recentOperations = action.payload.data || action.payload
       })
       // Fetch alerts
       .addCase(fetchStockAlerts.fulfilled, (state, action) => {
-        state.alerts = action.payload
+        state.alerts = action.payload.data || action.payload
       })
       // Fetch move history
       .addCase(fetchMoveHistory.pending, (state) => {

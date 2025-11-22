@@ -298,4 +298,50 @@ router.put('/:id/validate', auth, authorize('admin', 'manager'), async (req, res
   }
 });
 
+// @desc    Update delivery quantities
+// @route   PUT /api/deliveries/:id/quantities
+// @access  Private
+router.put('/:id/quantities', auth, async (req, res) => {
+  try {
+    const { products } = req.body;
+
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Products array is required'
+      });
+    }
+
+    const delivery = await Delivery.findById(req.params.id);
+
+    if (!delivery) {
+      return res.status(404).json({
+        success: false,
+        message: 'Delivery not found'
+      });
+    }
+
+    // Update quantities
+    delivery.products = products.map(p => ({
+      product: p.product,
+      quantity: p.quantity,
+      delivered: p.delivered || p.quantity
+    }));
+
+    await delivery.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Quantities updated successfully',
+      data: delivery
+    });
+  } catch (error) {
+    console.error('Update delivery quantities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating quantities'
+    });
+  }
+});
+
 module.exports = router;

@@ -34,6 +34,7 @@ const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         isActive: user.isActive,
         createdAt: user.createdAt
       }

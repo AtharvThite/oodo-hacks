@@ -295,4 +295,50 @@ router.put('/:id/validate', auth, authorize('admin', 'manager'), async (req, res
   }
 });
 
+// @desc    Update transfer quantities
+// @route   PUT /api/transfers/:id/quantities
+// @access  Private
+router.put('/:id/quantities', auth, async (req, res) => {
+  try {
+    const { products } = req.body;
+
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Products array is required'
+      });
+    }
+
+    const transfer = await Transfer.findById(req.params.id);
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found'
+      });
+    }
+
+    // Update quantities
+    transfer.products = products.map(p => ({
+      product: p.product,
+      quantity: p.quantity,
+      transferred: p.transferred || p.quantity
+    }));
+
+    await transfer.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Quantities updated successfully',
+      data: transfer
+    });
+  } catch (error) {
+    console.error('Update transfer quantities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating quantities'
+    });
+  }
+});
+
 module.exports = router;

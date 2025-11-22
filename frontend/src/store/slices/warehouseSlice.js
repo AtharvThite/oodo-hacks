@@ -148,7 +148,8 @@ const warehouseSlice = createSlice({
       })
       .addCase(createWarehouse.fulfilled, (state, action) => {
         state.isCreating = false
-        state.items.unshift(action.payload.warehouse || action.payload)
+        const warehouse = action.payload.data || action.payload.warehouse || action.payload
+        state.items.unshift(warehouse)
       })
       .addCase(createWarehouse.rejected, (state, action) => {
         state.isCreating = false
@@ -156,8 +157,16 @@ const warehouseSlice = createSlice({
       })
       
       // Fetch single warehouse
+      .addCase(fetchWarehouse.pending, (state) => {
+        state.isLoading = true
+      })
       .addCase(fetchWarehouse.fulfilled, (state, action) => {
-        state.currentWarehouse = action.payload.warehouse || action.payload
+        state.isLoading = false
+        state.currentWarehouse = action.payload.data || action.payload.warehouse || action.payload
+      })
+      .addCase(fetchWarehouse.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload
       })
       
       // Update warehouse
@@ -167,11 +176,12 @@ const warehouseSlice = createSlice({
       })
       .addCase(updateWarehouse.fulfilled, (state, action) => {
         state.isUpdating = false
-        const index = state.items.findIndex(item => item._id === action.payload.warehouse._id)
+        const warehouse = action.payload.data || action.payload.warehouse || action.payload
+        const index = state.items.findIndex(item => item._id === warehouse._id)
         if (index !== -1) {
-          state.items[index] = action.payload.warehouse
+          state.items[index] = warehouse
         }
-        state.currentWarehouse = action.payload.warehouse
+        state.currentWarehouse = warehouse
       })
       .addCase(updateWarehouse.rejected, (state, action) => {
         state.isUpdating = false

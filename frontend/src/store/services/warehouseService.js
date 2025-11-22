@@ -19,6 +19,18 @@ const warehouseService = {
     return response.data
   },
 
+  // Update warehouse
+  updateWarehouse: async (id, warehouseData) => {
+    const response = await api.put(`/warehouses/${id}`, warehouseData)
+    return response.data
+  },
+
+  // Delete warehouse
+  deleteWarehouse: async (id) => {
+    const response = await api.delete(`/warehouses/${id}`)
+    return response.data
+  },
+
   // Get all locations
   getLocations: async () => {
     const response = await api.get('/warehouses/locations/all')

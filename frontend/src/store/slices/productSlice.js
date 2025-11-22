@@ -158,7 +158,8 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.isCreating = false
-        state.items.unshift(action.payload)
+        const product = action.payload.data || action.payload
+        state.items.unshift(product)
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.isCreating = false
@@ -171,12 +172,13 @@ const productSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.isUpdating = false
-        const index = state.items.findIndex(item => item._id === action.payload._id)
+        const product = action.payload.data || action.payload
+        const index = state.items.findIndex(item => item._id === product._id)
         if (index !== -1) {
-          state.items[index] = action.payload
+          state.items[index] = product
         }
-        if (state.currentProduct?._id === action.payload._id) {
-          state.currentProduct = action.payload
+        if (state.currentProduct?._id === product._id) {
+          state.currentProduct = product
         }
       })
       .addCase(updateProduct.rejected, (state, action) => {
@@ -189,7 +191,7 @@ const productSlice = createSlice({
       })
       // Fetch categories
       .addCase(fetchCategories.fulfilled, (state, action) => {
-        state.categories = action.payload
+        state.categories = action.payload.data || action.payload
       })
   },
 })

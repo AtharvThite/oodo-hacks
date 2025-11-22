@@ -65,22 +65,22 @@ router.get('/:id', auth, async (req, res) => {
 
 // @desc    Create new warehouse
 // @route   POST /api/warehouses
-// @access  Private (Manager/Admin)
-router.post('/', auth, authorize('admin', 'manager'), [
+// @access  Private (All authenticated users)
+router.post('/', auth, [
   body('name')
     .trim()
     .notEmpty()
     .withMessage('Warehouse name is required')
     .isLength({ max: 100 })
     .withMessage('Name cannot exceed 100 characters'),
-  body('shortCode')
+  body('code')
     .trim()
     .notEmpty()
-    .withMessage('Short code is required')
+    .withMessage('Warehouse code is required')
     .isLength({ max: 10 })
-    .withMessage('Short code cannot exceed 10 characters')
-    .matches(/^[A-Z0-9]+$/)
-    .withMessage('Short code can only contain uppercase letters and numbers')
+    .withMessage('Code cannot exceed 10 characters')
+    .matches(/^[A-Z0-9-_]+$/)
+    .withMessage('Code can only contain uppercase letters, numbers, hyphens, and underscores')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -94,7 +94,7 @@ router.post('/', auth, authorize('admin', 'manager'), [
 
     const warehouse = await Warehouse.create({
       ...req.body,
-      shortCode: req.body.shortCode.toUpperCase(),
+      code: req.body.code.toUpperCase(),
       createdBy: req.user.id
     });
 
@@ -110,12 +110,116 @@ router.post('/', auth, authorize('admin', 'manager'), [
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Warehouse with this short code already exists'
+        message: 'Warehouse with this code already exists'
       });
     }
     res.status(500).json({
       success: false,
       message: 'Server error creating warehouse'
+    });
+  }
+});
+
+// @desc    Update warehouse
+// @route   PUT /api/warehouses/:id
+// @access  Private (Manager/Admin)
+router.put('/:id', auth, authorize('admin', 'manager'), [
+  body('name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Warehouse name cannot be empty')
+    .isLength({ max: 100 })
+    .withMessage('Name cannot exceed 100 characters'),
+  body('code')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Warehouse code cannot be empty')
+    .isLength({ max: 10 })
+    .withMessage('Code cannot exceed 10 characters')
+    .matches(/^[A-Z0-9-_]+$/)
+    .withMessage('Code can only contain uppercase letters, numbers, hyphens, and underscores')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    let warehouse = await Warehouse.findById(req.params.id);
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: 'Warehouse not found'
+      });
+    }
+
+    // Update fields
+    const updateData = { ...req.body };
+    if (updateData.code) {
+      updateData.code = updateData.code.toUpperCase();
+    }
+
+    warehouse = await Warehouse.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse updated successfully',
+      data: warehouse
+    });
+  } catch (error) {
+    console.error('Update warehouse error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Warehouse with this code already exists'
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating warehouse'
+    });
+  }
+});
+
+// @desc    Delete warehouse (soft delete)
+// @route   DELETE /api/warehouses/:id
+// @access  Private (Admin)
+router.delete('/:id', auth, authorize('admin'), async (req, res) => {
+  try {
+    const warehouse = await Warehouse.findById(req.params.id);
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: 'Warehouse not found'
+      });
+    }
+
+    // Soft delete
+    warehouse.isActive = false;
+    await warehouse.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse deleted successfully',
+      data: {}
+    });
+  } catch (error) {
+    console.error('Delete warehouse error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting warehouse'
     });
   }
 });
@@ -126,7 +230,7 @@ router.post('/', auth, authorize('admin', 'manager'), [
 router.get('/locations/all', auth, async (req, res) => {
   try {
     const locations = await Location.find({ isActive: true })
-      .populate('warehouse', 'name shortCode')
+      .populate('warehouse', 'name code')
       .populate('createdBy', 'name email')
       .sort({ 'warehouse.name': 1, name: 1 });
 
@@ -189,7 +293,7 @@ router.post('/:warehouseId/locations', auth, authorize('admin', 'manager'), [
       createdBy: req.user.id
     });
 
-    await location.populate('warehouse createdBy', 'name shortCode');
+    await location.populate('warehouse createdBy', 'name code');
 
     res.status(201).json({
       success: true,

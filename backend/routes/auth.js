@@ -520,6 +520,7 @@ router.get('/me', auth, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         isActive: user.isActive,
         lastLogin: user.lastLogin,
         createdAt: user.createdAt

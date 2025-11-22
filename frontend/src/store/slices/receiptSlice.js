@@ -101,8 +101,8 @@ const receiptSlice = createSlice({
       })
       .addCase(fetchReceipts.fulfilled, (state, action) => {
         state.isLoading = false
-        state.items = action.payload.receipts || []
-        state.pagination = {
+        state.items = action.payload.data || action.payload.receipts || []
+        state.pagination = action.payload.pagination || {
           page: action.payload.page || 1,
           limit: action.payload.limit || 20,
           totalItems: action.payload.totalItems || 0,
@@ -115,7 +115,7 @@ const receiptSlice = createSlice({
       })
       
       .addCase(fetchReceipt.fulfilled, (state, action) => {
-        state.currentReceipt = action.payload.receipt
+        state.currentReceipt = action.payload.data || action.payload.receipt || action.payload
       })
       
       .addCase(createReceipt.pending, (state) => {
@@ -124,7 +124,8 @@ const receiptSlice = createSlice({
       })
       .addCase(createReceipt.fulfilled, (state, action) => {
         state.isCreating = false
-        state.items.unshift(action.payload.receipt)
+        const receipt = action.payload.data || action.payload.receipt || action.payload
+        state.items.unshift(receipt)
       })
       .addCase(createReceipt.rejected, (state, action) => {
         state.isCreating = false
@@ -137,11 +138,12 @@ const receiptSlice = createSlice({
       })
       .addCase(updateReceipt.fulfilled, (state, action) => {
         state.isUpdating = false
-        const index = state.items.findIndex(item => item._id === action.payload.receipt._id)
+        const receipt = action.payload.data || action.payload.receipt || action.payload
+        const index = state.items.findIndex(item => item._id === receipt._id)
         if (index !== -1) {
-          state.items[index] = action.payload.receipt
+          state.items[index] = receipt
         }
-        state.currentReceipt = action.payload.receipt
+        state.currentReceipt = receipt
       })
       .addCase(updateReceipt.rejected, (state, action) => {
         state.isUpdating = false

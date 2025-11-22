@@ -25,19 +25,30 @@ const WarehouseForm = () => {
   useEffect(() => {
     if (isEditing && id) {
       dispatch(fetchWarehouse(id))
+    } else {
+      // Clear form when creating new warehouse
+      reset({
+        name: '',
+        code: '',
+        address: '',
+        manager: '',
+        phone: '',
+        email: '',
+        isActive: true
+      })
     }
-  }, [dispatch, id, isEditing])
+  }, [dispatch, id, isEditing, reset])
 
   useEffect(() => {
     if (isEditing && currentWarehouse) {
       reset({
-        name: currentWarehouse.name,
-        code: currentWarehouse.code,
-        address: currentWarehouse.address,
-        manager: currentWarehouse.manager,
-        phone: currentWarehouse.phone,
-        email: currentWarehouse.email,
-        isActive: currentWarehouse.isActive
+        name: currentWarehouse.name || '',
+        code: currentWarehouse.code || '',
+        address: currentWarehouse.address || '',
+        manager: currentWarehouse.manager || '',
+        phone: currentWarehouse.phone || '',
+        email: currentWarehouse.email || '',
+        isActive: currentWarehouse.isActive !== undefined ? currentWarehouse.isActive : true
       })
     }
   }, [currentWarehouse, isEditing, reset])
