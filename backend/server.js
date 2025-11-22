@@ -40,6 +40,7 @@ app.use('/api/adjustments', require('./routes/adjustments'));
 app.use('/api/warehouses', require('./routes/warehouses'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
