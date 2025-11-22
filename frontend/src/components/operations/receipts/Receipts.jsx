@@ -2,13 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchReceipts, setFilters } from '../../../store/slices/receiptSlice'
-import Card from '../../common/Card'
-import Button from '../../common/Button'
-import SearchInput from '../../common/SearchInput'
-import Select from '../../common/Select'
-import Badge from '../../common/Badge'
 import LoadingSpinner from '../../common/LoadingSpinner'
-import { PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { Plus, Eye, FileText, Package, Search, Filter, ArrowRight } from 'lucide-react'
 
 const Receipts = () => {
   const dispatch = useDispatch()
@@ -39,152 +34,210 @@ const Receipts = () => {
     return () => clearTimeout(timeoutId)
   }
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      draft: { variant: 'secondary', text: 'Draft' },
-      confirmed: { variant: 'primary', text: 'Confirmed' },
-      received: { variant: 'success', text: 'Received' },
-      cancelled: { variant: 'danger', text: 'Cancelled' }
+  const getStatusConfig = (status) => {
+    const configs = {
+      draft: { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-500/20', label: 'Draft' },
+      confirmed: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/20', label: 'Confirmed' },
+      received: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20', label: 'Received' },
+      cancelled: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Cancelled' }
     }
-    
-    const config = statusConfig[status] || statusConfig.draft
-    return <Badge variant={config.variant}>{config.text}</Badge>
+    return configs[status] || configs.draft
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="large" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <LoadingSpinner size="large" />
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Loading receipts...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Receipts</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage incoming stock receipts
-          </p>
-        </div>
-        <Link to="/receipts/new">
-          <Button icon={PlusIcon}>
-            New Receipt
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+      {/* Animated background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      {/* Filters */}
-      <Card>
-        <div className="p-6">
+      <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Receipts</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  Manage incoming stock receipts
+                </p>
+              </div>
+            </div>
+          </div>
+          <Link to="/operations/receipts/new">
+            <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-105">
+              <Plus className="h-5 w-5" />
+              New Receipt
+            </button>
+          </Link>
+        </div>
+
+        {/* Filters */}
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-5 w-5 text-slate-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wide">Filters</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SearchInput
-              placeholder="Search receipts..."
-              value={localFilters.search}
-              onChange={handleSearch}
-            />
-            <Select
-              placeholder="All Status"
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search receipts..."
+                value={localFilters.search}
+                onChange={handleSearch}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+              />
+            </div>
+            
+            {/* Status Filter */}
+            <select
               value={localFilters.status}
               onChange={(e) => {
                 const status = e.target.value
                 setLocalFilters(prev => ({ ...prev, status }))
                 dispatch(setFilters({ status }))
               }}
+              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
               <option value="confirmed">Confirmed</option>
               <option value="received">Received</option>
               <option value="cancelled">Cancelled</option>
-            </Select>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">
+            </select>
+            
+            {/* Count */}
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+              <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                 {pagination.totalItems || 0} receipts
               </span>
             </div>
           </div>
         </div>
-      </Card>
 
       {/* Receipts List */}
-      <Card>
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg overflow-hidden animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Receipt #
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Supplier
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Warehouse
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Total Value
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
               {receipts && receipts.length > 0 ? (
-                receipts.map((receipt) => (
-                  <tr key={receipt._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {receipt.receiptNumber}
+                receipts.map((receipt, index) => (
+                  <tr 
+                    key={receipt._id} 
+                    className="group hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-slate-700/30 dark:hover:to-slate-700/30 transition-all"
+                    style={{ 
+                      animationDelay: `${index * 0.05}s`,
+                      animation: 'fade-in 0.3s ease-out forwards'
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                          <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {receipt.receiptNumber}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
                       {receipt.supplier?.name || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
                       {receipt.warehouse?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(receipt.status)}
+                      {(() => {
+                        const config = getStatusConfig(receipt.status)
+                        return (
+                          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold ${config.bg} ${config.text} border ${config.border}`}>
+                            {config.label}
+                          </span>
+                        )
+                      })()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
                       {new Date(receipt.expectedDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">
                       ${receipt.totalValue?.toFixed(2) || '0.00'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
                       <Link
-                        to={`/receipts/${receipt._id}`}
-                        className="text-primary-600 hover:text-primary-900"
+                        to={`/operations/receipts/${receipt._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-green-500 hover:text-white dark:hover:bg-green-500 font-medium text-sm transition-all group-hover:shadow-lg"
                       >
+                        <Eye className="h-4 w-4" />
                         View
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="7" className="px-6 py-16">
                     <div className="text-center">
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      <div className="flex justify-center mb-4">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-green-500/10">
+                          <FileText className="h-10 w-10 text-green-600 dark:text-green-400" />
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                         No receipts found
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Get started by creating a new receipt.
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                        Get started by creating your first receipt.
                       </p>
                       <div className="mt-6">
-                        <Link to="/receipts/new">
-                          <Button icon={PlusIcon}>
+                        <Link to="/operations/receipts/new">
+                          <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-105">
+                            <Plus className="h-5 w-5" />
                             New Receipt
-                          </Button>
+                          </button>
                         </Link>
                       </div>
                     </div>
@@ -194,7 +247,8 @@ const Receipts = () => {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
+      </div>
     </div>
   )
 }

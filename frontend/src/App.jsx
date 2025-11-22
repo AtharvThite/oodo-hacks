@@ -28,7 +28,6 @@ import MoveHistory from './components/operations/MoveHistory'
 import Warehouses from './components/warehouses/Warehouses'
 import WarehouseForm from './components/warehouses/WarehouseForm'
 import Profile from './components/profile/Profile'
-import Settings from './components/settings/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import LandingPage from './components/landing/LandingPage'
 
@@ -118,13 +117,13 @@ function App() {
                   {/* Move History */}
                   <Route path="/operations/move-history" element={<MoveHistory />} />
 
-                  {/* Settings - Warehouses */}
-                  <Route path="/settings/warehouses" element={<Warehouses />} />
-                  <Route path="/settings/warehouses/new" element={<WarehouseForm />} />
+                  {/* Warehouses */}
+                  <Route path="/warehouses" element={<Warehouses />} />
+                  <Route path="/warehouses/new" element={<WarehouseForm />} />
+                  <Route path="/warehouses/:id/edit" element={<WarehouseForm />} />
 
-                  {/* Profile & Settings */}
+                  {/* Profile */}
                   <Route path="/profile" element={<Profile />} />
-                  <Route path="/settings" element={<Settings />} />
 
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />

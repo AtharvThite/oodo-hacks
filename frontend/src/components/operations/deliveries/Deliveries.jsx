@@ -2,13 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchDeliveries, setFilters } from '../../../store/slices/deliverySlice'
-import Card from '../../common/Card'
-import Button from '../../common/Button'
-import SearchInput from '../../common/SearchInput'
-import Select from '../../common/Select'
-import Badge from '../../common/Badge'
 import LoadingSpinner from '../../common/LoadingSpinner'
-import { PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { Plus, Eye, Truck, Search, Filter, ArrowRight, Package } from 'lucide-react'
 
 const Deliveries = () => {
   const dispatch = useDispatch()
@@ -39,61 +34,80 @@ const Deliveries = () => {
     return () => clearTimeout(timeoutId)
   }
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      draft: { variant: 'secondary', text: 'Draft' },
-      confirmed: { variant: 'primary', text: 'Confirmed' },
-      shipped: { variant: 'warning', text: 'Shipped' },
-      delivered: { variant: 'success', text: 'Delivered' },
-      cancelled: { variant: 'danger', text: 'Cancelled' }
+  const getStatusConfig = (status) => {
+    const configs = {
+      draft: { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-500/20', label: 'Draft' },
+      confirmed: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/20', label: 'Confirmed' },
+      shipped: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20', label: 'Shipped' },
+      delivered: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20', label: 'Delivered' },
+      cancelled: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Cancelled' }
     }
-    
-    const config = statusConfig[status] || statusConfig.draft
-    return <Badge variant={config.variant}>{config.text}</Badge>
+    return configs[status] || configs.draft
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="large" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <LoadingSpinner size="large" />
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Loading deliveries...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Deliveries</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage outgoing stock deliveries
-          </p>
-        </div>
-        <Link to="/deliveries/new">
-          <Button icon={PlusIcon}>
-            New Delivery
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-pink-500/5 dark:bg-pink-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      {/* Filters */}
-      <Card>
-        <div className="p-6">
+      <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/30">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Deliveries</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Manage outgoing stock deliveries</p>
+              </div>
+            </div>
+          </div>
+          <Link to="/operations/deliveries/new">
+            <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all hover:scale-105">
+              <Plus className="h-5 w-5" />
+              New Delivery
+            </button>
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-5 w-5 text-slate-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wide">Filters</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SearchInput
-              placeholder="Search deliveries..."
-              value={localFilters.search}
-              onChange={handleSearch}
-            />
-            <Select
-              placeholder="All Status"
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search deliveries..."
+                value={localFilters.search}
+                onChange={handleSearch}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+              />
+            </div>
+            <select
               value={localFilters.status}
               onChange={(e) => {
                 const status = e.target.value
                 setLocalFilters(prev => ({ ...prev, status }))
                 dispatch(setFilters({ status }))
               }}
+              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
@@ -101,102 +115,113 @@ const Deliveries = () => {
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
-            </Select>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">
-                {pagination.totalItems || 0} deliveries
+            </select>
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                {pagination.totalItems || 0} total deliveries
               </span>
             </div>
           </div>
         </div>
-      </Card>
 
-      {/* Deliveries List */}
-      <Card>
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Delivery #
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Warehouse
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Scheduled Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Value
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {deliveries && deliveries.length > 0 ? (
-                deliveries.map((delivery) => (
-                  <tr key={delivery._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {delivery.deliveryNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {delivery.customer?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {delivery.warehouse?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(delivery.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(delivery.scheduledDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${delivery.totalValue?.toFixed(2) || '0.00'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
-                        to={`/deliveries/${delivery._id}`}
-                        className="text-primary-600 hover:text-primary-900"
-                      >
-                        View
-                      </Link>
-                    </td>
+        {/* Deliveries Table */}
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm overflow-hidden shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          {deliveries && deliveries.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Delivery #
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Warehouse
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Scheduled Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Total Value
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
-                    <div className="text-center">
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">
-                        No deliveries found
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Get started by creating a new delivery.
-                      </p>
-                      <div className="mt-6">
-                        <Link to="/deliveries/new">
-                          <Button icon={PlusIcon}>
-                            New Delivery
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                  {deliveries.map((delivery, index) => {
+                    const statusConfig = getStatusConfig(delivery.status)
+                    return (
+                      <tr 
+                        key={delivery._id} 
+                        className="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${0.05 * index}s` }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {delivery.deliveryNumber}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {delivery.customer?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {delivery.warehouse?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.text.replace('text-', 'bg-')}`} />
+                            {statusConfig.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {new Date(delivery.scheduledDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">
+                          ${delivery.totalValue?.toFixed(2) || '0.00'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <Link to={`/operations/deliveries/${delivery._id}`}>
+                            <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium text-sm transition-all group-hover:scale-105">
+                              <Eye className="h-4 w-4" />
+                              View
+                              <ArrowRight className="h-3 w-3 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                            </button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 mb-4">
+                <Package className="h-10 w-10 text-purple-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                No deliveries found
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">
+                Get started by creating your first delivery
+              </p>
+              <Link to="/operations/deliveries/new">
+                <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all hover:scale-105">
+                  <Plus className="h-5 w-5" />
+                  Create Delivery
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

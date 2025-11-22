@@ -6,7 +6,7 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
+    <div className="h-screen flex overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
       {/* Sidebar for desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
@@ -17,8 +17,8 @@ const Layout = ({ children }) => {
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 flex z-40 md:hidden" role="dialog" aria-modal="true">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-slate-800 shadow-2xl">
             <Sidebar mobile onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
@@ -28,11 +28,7 @@ const Layout = ({ children }) => {
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {children}
-            </div>
-          </div>
+          {children}
         </main>
       </div>
     </div>

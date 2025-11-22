@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { Bars3Icon, BellIcon } from '@heroicons/react/24/outline'
-import SearchInput from '../common/SearchInput'
+import { Menu, Bell, Moon, Sun, Search, Package, Truck, FileText, ShieldCheck, ChevronDown, User } from 'lucide-react'
 import Badge from '../common/Badge'
 import Button from '../common/Button'
 import UserManagement from '../admin/UserManagement'
 import { fetchProducts } from '../../store/slices/productSlice'
 import api from '../../store/services/api'
+import { useTheme } from '../../context/ThemeContext'
 
 const Header = ({ onMenuClick }) => {
   const { user } = useSelector((state) => state.auth)
@@ -103,63 +103,105 @@ const Header = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const { theme, toggleTheme } = useTheme()
+
+  const getSearchIcon = (type) => {
+    switch(type) {
+      case 'product': return Package
+      case 'receipt': return FileText
+      case 'delivery': return Truck
+      default: return Package
+    }
+  }
+
   return (
     <>
-      <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+      <div className="relative z-10 flex-shrink-0 flex h-16 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700/50 shadow-lg transition-colors duration-300">
+        {/* Gradient accent line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500" />
+        
         {/* Mobile menu button */}
         <button
           type="button"
-          className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 md:hidden"
+          className="px-4 border-r border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 md:hidden transition-all"
           onClick={onMenuClick}
         >
-          <Bars3Icon className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
         
-        <div className="flex-1 px-4 flex justify-between">
-          <div className="flex-1 flex">
+        <div className="flex-1 px-4 flex justify-between items-center">
+          <div className="flex-1 flex items-center">
             <div className="w-full flex md:ml-0">
-              <div className="relative w-full text-gray-400 focus-within:text-gray-600" ref={searchRef}>
-                <div className="flex items-center h-16">
-                  <SearchInput 
-                    placeholder="Search products, receipts, deliveries..."
-                    className="max-w-lg"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    onFocus={() => searchQuery && setShowSearchResults(true)}
-                  />
+              <div className="relative w-full" ref={searchRef}>
+                <div className="flex items-center">
+                  {/* Enhanced Search Input */}
+                  <div className="relative max-w-xl w-full">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input
+                      type="text"
+                      className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition-all"
+                      placeholder="Search products, receipts, deliveries..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onFocus={() => searchQuery && setShowSearchResults(true)}
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('')
+                          setSearchResults([])
+                          setShowSearchResults(false)
+                        }}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      >
+                        <span className="text-xs font-medium">✕</span>
+                      </button>
+                    )}
+                  </div>
                   
                   {/* Search Results Dropdown */}
                   {showSearchResults && searchResults.length > 0 && (
-                    <div className="absolute top-full left-0 w-full max-w-lg mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+                    <div className="absolute top-full left-0 w-full max-w-xl mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in">
+                      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/50">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Search Results</p>
+                      </div>
                       <div className="max-h-96 overflow-y-auto">
-                        {searchResults.map((result) => (
-                          <button
-                            key={`${result.type}-${result.id}`}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors"
-                            onClick={() => {
-                              navigate(result.path)
-                              setShowSearchResults(false)
-                              setSearchQuery('')
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">{result.title}</p>
-                                <p className="text-xs text-gray-500">{result.description}</p>
+                        {searchResults.map((result) => {
+                          const IconComponent = getSearchIcon(result.type)
+                          return (
+                            <button
+                              key={`${result.type}-${result.id}`}
+                              className="w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 dark:hover:from-slate-700/30 dark:hover:to-slate-700/30 border-b border-slate-200 dark:border-slate-700/30 last:border-b-0 transition-all group"
+                              onClick={() => {
+                                navigate(result.path)
+                                setShowSearchResults(false)
+                                setSearchQuery('')
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30 transition-colors flex-shrink-0">
+                                  <IconComponent className="h-5 w-5 text-slate-600 dark:text-slate-400 group-hover:text-primary-600 dark:group-hover:text-primary-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{result.title}</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{result.description}</p>
+                                </div>
+                                <span className="ml-2 px-2.5 py-1 text-xs font-semibold bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-lg capitalize border border-primary-500/20 flex-shrink-0">
+                                  {result.type}
+                                </span>
                               </div>
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded capitalize">
-                                {result.type}
-                              </span>
-                            </div>
-                          </button>
-                        ))}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
                   
                   {showSearchResults && searchQuery && searchResults.length === 0 && (
-                    <div className="absolute top-full left-0 w-full max-w-lg mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 p-4">
-                      <p className="text-sm text-gray-500 text-center">No results found for "{searchQuery}"</p>
+                    <div className="absolute top-full left-0 w-full max-w-lg mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 p-4 animate-fade-in">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 text-center">No results found for "{searchQuery}"</p>
                     </div>
                   )}
                 </div>
@@ -167,30 +209,54 @@ const Header = ({ onMenuClick }) => {
             </div>
           </div>
           
-          <div className="ml-4 flex items-center md:ml-6 space-x-4">
+          <div className="ml-4 flex items-center md:ml-6 gap-2">
             {/* Admin - Manage Access Button */}
             {isAdmin && (
-              <Button
-                size="small"
+              <button
                 onClick={() => setIsUserManagementOpen(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary-500/30 transition-all hover:scale-105"
               >
+                <ShieldCheck className="h-4 w-4" />
                 Manage Access
-              </Button>
+              </button>
             )}
 
-            {/* Notifications */}
-            <button className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-              <BellIcon className="h-6 w-6" />
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group"
+              aria-label="Toggle theme"
+            >
+              <div className="relative">
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
+                ) : (
+                  <Moon className="h-5 w-5 group-hover:-rotate-12 transition-transform duration-300" />
+                )}
+              </div>
             </button>
 
-            {/* Profile dropdown */}
-            <div className="flex items-center text-sm">
-              <span className="hidden md:block mr-3">
-                Welcome back, <span className="font-medium">{user?.name}</span>
+            {/* Notifications */}
+            <button className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group">
+              <Bell className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <Badge variant="primary" size="small">
-                {user?.role}
-              </Badge>
+            </button>
+
+            {/* Profile Section */}
+            <div className="flex items-center gap-3 pl-2 ml-2 border-l border-slate-200 dark:border-slate-700">
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">{user?.name}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user?.role}</span>
+              </div>
+              <div className="relative group cursor-pointer">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg group-hover:shadow-primary-500/50 transition-all group-hover:scale-110">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+              </div>
             </div>
           </div>
         </div>
