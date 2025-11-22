@@ -10,7 +10,7 @@ const router = express.Router();
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const warehouses = await Warehouse.find({ isActive: true })
+    const warehouses = await Warehouse.find()
       .populate('createdBy', 'name email')
       .sort({ name: 1 });
 

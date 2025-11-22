@@ -36,13 +36,47 @@ const Adjustments = () => {
 
   const getTypeConfig = (type) => {
     const configs = {
-      increase: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20', label: 'Increase' },
-      decrease: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Decrease' },
-      correction: { bg: 'bg-yellow-500/10', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-500/20', label: 'Correction' },
-      damaged: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20', label: 'Damaged' },
-      lost: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Lost' }
+      physical_count: { 
+        bg: 'bg-blue-500/10', 
+        text: 'text-blue-600 dark:text-blue-400', 
+        border: 'border-blue-500/20', 
+        label: 'Physical Count' 
+      },
+      damage: { 
+        bg: 'bg-red-500/10', 
+        text: 'text-red-600 dark:text-red-400', 
+        border: 'border-red-500/20', 
+        label: 'Damage' 
+      },
+      loss: { 
+        bg: 'bg-red-500/10', 
+        text: 'text-red-600 dark:text-red-400', 
+        border: 'border-red-500/20', 
+        label: 'Loss' 
+      },
+      found: { 
+        bg: 'bg-green-500/10', 
+        text: 'text-green-600 dark:text-green-400', 
+        border: 'border-green-500/20', 
+        label: 'Found' 
+      },
+      correction: { 
+        bg: 'bg-yellow-500/10', 
+        text: 'text-yellow-600 dark:text-yellow-400', 
+        border: 'border-yellow-500/20', 
+        label: 'Correction' 
+      }
     }
     return configs[type] || configs.correction
+  }
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      draft: { bg: 'bg-gray-500/10', text: 'text-gray-600 dark:text-gray-400', border: 'border-gray-500/20' },
+      done: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20' },
+      cancelled: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20' }
+    }
+    return configs[status] || configs.draft
   }
 
   if (isLoading) {
@@ -110,11 +144,11 @@ const Adjustments = () => {
               className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             >
               <option value="">All Types</option>
-              <option value="increase">Increase</option>
-              <option value="decrease">Decrease</option>
+              <option value="physical_count">Physical Count</option>
+              <option value="damage">Damage</option>
+              <option value="loss">Loss</option>
+              <option value="found">Found</option>
               <option value="correction">Correction</option>
-              <option value="damaged">Damaged</option>
-              <option value="lost">Lost</option>
             </select>
             <div className="flex items-center">
               <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -134,19 +168,19 @@ const Adjustments = () => {
                       Reference
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Warehouse
+                      Location
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Type
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Quantity
+                      Products
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Status
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Actions
@@ -156,7 +190,7 @@ const Adjustments = () => {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {adjustments.map((adjustment, index) => {
                     const typeConfig = getTypeConfig(adjustment.adjustmentType)
-                    const isIncrease = ['increase', 'correction'].includes(adjustment.adjustmentType)
+                    const statusConfig = getStatusConfig(adjustment.status)
                     return (
                       <tr 
                         key={adjustment._id} 
@@ -169,10 +203,7 @@ const Adjustments = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                          {adjustment.product?.name || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                          {adjustment.warehouse?.name || 'N/A'}
+                          {adjustment.location || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${typeConfig.bg} ${typeConfig.text} ${typeConfig.border}`}>
@@ -181,15 +212,19 @@ const Adjustments = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 text-sm font-semibold ${
-                            isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                          }`}>
-                            {isIncrease ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                            {isIncrease ? '+' : '-'}{Math.abs(adjustment.quantityChange)}
+                          <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <Package className="h-4 w-4" />
+                            {adjustment.products?.length || 0} item(s)
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                           {new Date(adjustment.adjustmentDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.text.replace('text-', 'bg-')}`} />
+                            {adjustment.status}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <Link to={`/operations/adjustments/${adjustment._id}`}>

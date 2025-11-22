@@ -23,8 +23,7 @@ const receiptSchema = new mongoose.Schema({
     required: [true, 'Warehouse is required']
   },
   location: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
+    type: String,
     required: [true, 'Location is required']
   },
   scheduledDate: {

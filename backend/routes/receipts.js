@@ -92,14 +92,14 @@ router.post('/', auth, [
     .isMongoId()
     .withMessage('Valid warehouse ID is required'),
   body('location')
-    .isMongoId()
-    .withMessage('Valid location ID is required'),
+    .notEmpty()
+    .withMessage('Location is required'),
   body('products')
     .isArray({ min: 1 })
     .withMessage('At least one product is required'),
   body('products.*.product')
-    .isMongoId()
-    .withMessage('Valid product ID is required'),
+    .notEmpty()
+    .withMessage('Product is required'),
   body('products.*.expectedQuantity')
     .isFloat({ gt: 0 })
     .withMessage('Expected quantity must be greater than 0')
@@ -114,8 +114,33 @@ router.post('/', auth, [
       });
     }
 
+    // Convert product SKUs to ObjectIds
+    const productPromises = req.body.products.map(async (item) => {
+      let productId = item.product;
+      
+      // Check if it's a MongoDB ObjectId or SKU
+      if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
+        // It's a SKU, find the product
+        const product = await Product.findOne({ sku: productId.toUpperCase() });
+        if (!product) {
+          throw new Error(`Product with SKU ${productId} not found`);
+        }
+        productId = product._id;
+      }
+      
+      return {
+        product: productId,
+        expectedQuantity: item.expectedQuantity,
+        unitPrice: item.unitPrice || 0,
+        notes: item.notes
+      };
+    });
+
+    const products = await Promise.all(productPromises);
+
     const receipt = await Receipt.create({
       ...req.body,
+      products,
       createdBy: req.user.id
     });
 

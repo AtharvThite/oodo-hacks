@@ -8,8 +8,7 @@ const adjustmentSchema = new mongoose.Schema({
     trim: true
   },
   location: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
+    type: String,
     required: [true, 'Location is required']
   },
   adjustmentDate: {

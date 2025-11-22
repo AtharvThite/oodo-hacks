@@ -39,8 +39,9 @@ const ReceiptDetail = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       draft: { variant: 'secondary', text: 'Draft' },
-      confirmed: { variant: 'primary', text: 'Confirmed' },
-      received: { variant: 'success', text: 'Received' },
+      waiting: { variant: 'warning', text: 'Waiting' },
+      ready: { variant: 'primary', text: 'Ready' },
+      done: { variant: 'success', text: 'Done' },
       cancelled: { variant: 'danger', text: 'Cancelled' }
     }
     
@@ -61,10 +62,10 @@ const ReceiptDetail = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              {receipt.receiptNumber}
+              {receipt.reference}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Supplier: {receipt.supplier}
+              Supplier: {receipt.supplier?.name || 'N/A'}
             </p>
           </div>
         </div>
@@ -81,17 +82,17 @@ const ReceiptDetail = () => {
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <dt className="text-sm font-medium text-gray-500">Warehouse</dt>
-              <dd className="mt-1 text-sm text-gray-900">{receipt.warehouse?.name}</dd>
+              <dd className="mt-1 text-sm text-gray-900">{receipt.warehouse?.name || 'N/A'}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Expected Date</dt>
+              <dt className="text-sm font-medium text-gray-500">Scheduled Date</dt>
               <dd className="mt-1 text-sm text-gray-900">
-                {new Date(receipt.expectedDate).toLocaleDateString()}
+                {new Date(receipt.scheduledDate).toLocaleDateString()}
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Total Value</dt>
-              <dd className="mt-1 text-sm text-gray-900">${receipt.totalValue?.toFixed(2)}</dd>
+              <dd className="mt-1 text-sm text-gray-900">${receipt.totalValue?.toFixed(2) || '0.00'}</dd>
             </div>
           </dl>
         </div>

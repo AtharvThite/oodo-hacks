@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchReceipts, setFilters } from '../../../store/slices/receiptSlice'
 import LoadingSpinner from '../../common/LoadingSpinner'
-import { Plus, Eye, FileText, Package, Search, Filter, ArrowRight } from 'lucide-react'
+import { Plus, Eye, FileText, Package, Search, Filter, ArrowRight, PackagePlus } from 'lucide-react'
 
 const Receipts = () => {
   const dispatch = useDispatch()
@@ -36,10 +36,36 @@ const Receipts = () => {
 
   const getStatusConfig = (status) => {
     const configs = {
-      draft: { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-500/20', label: 'Draft' },
-      confirmed: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/20', label: 'Confirmed' },
-      received: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20', label: 'Received' },
-      cancelled: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Cancelled' }
+      draft: { 
+        bg: 'bg-slate-500/10', 
+        text: 'text-slate-600 dark:text-slate-400', 
+        border: 'border-slate-500/20', 
+        label: 'Draft' 
+      },
+      waiting: { 
+        bg: 'bg-yellow-500/10', 
+        text: 'text-yellow-600 dark:text-yellow-400', 
+        border: 'border-yellow-500/20', 
+        label: 'Waiting' 
+      },
+      ready: { 
+        bg: 'bg-blue-500/10', 
+        text: 'text-blue-600 dark:text-blue-400', 
+        border: 'border-blue-500/20', 
+        label: 'Ready' 
+      },
+      done: { 
+        bg: 'bg-green-500/10', 
+        text: 'text-green-600 dark:text-green-400', 
+        border: 'border-green-500/20', 
+        label: 'Done' 
+      },
+      cancelled: { 
+        bg: 'bg-red-500/10', 
+        text: 'text-red-600 dark:text-red-400', 
+        border: 'border-red-500/20', 
+        label: 'Cancelled' 
+      }
     }
     return configs[status] || configs.draft
   }
@@ -60,7 +86,7 @@ const Receipts = () => {
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -69,7 +95,7 @@ const Receipts = () => {
           <div>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
-                <FileText className="h-6 w-6 text-white" />
+                <PackagePlus className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Receipts</h1>
@@ -118,8 +144,9 @@ const Receipts = () => {
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="received">Received</option>
+              <option value="waiting">Waiting</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
               <option value="cancelled">Cancelled</option>
             </select>
             
@@ -133,121 +160,108 @@ const Receipts = () => {
           </div>
         </div>
 
-      {/* Receipts List */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg overflow-hidden animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-            <thead className="bg-slate-50 dark:bg-slate-900/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Receipt #
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Supplier
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Warehouse
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Total Value
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
-              {receipts && receipts.length > 0 ? (
-                receipts.map((receipt, index) => (
-                  <tr 
-                    key={receipt._id} 
-                    className="group hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-slate-700/30 dark:hover:to-slate-700/30 transition-all"
-                    style={{ 
-                      animationDelay: `${index * 0.05}s`,
-                      animation: 'fade-in 0.3s ease-out forwards'
-                    }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                          <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {receipt.receiptNumber}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
-                      {receipt.supplier?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
-                      {receipt.warehouse?.name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {(() => {
-                        const config = getStatusConfig(receipt.status)
-                        return (
-                          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold ${config.bg} ${config.text} border ${config.border}`}>
-                            {config.label}
-                          </span>
-                        )
-                      })()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
-                      {new Date(receipt.expectedDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">
-                      ${receipt.totalValue?.toFixed(2) || '0.00'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <Link
-                        to={`/operations/receipts/${receipt._id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-green-500 hover:text-white dark:hover:bg-green-500 font-medium text-sm transition-all group-hover:shadow-lg"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </td>
+        {/* Receipts Table */}
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg overflow-hidden animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          {receipts && receipts.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Receipt #
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Supplier
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Warehouse
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Scheduled Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Total Value
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-16">
-                    <div className="text-center">
-                      <div className="flex justify-center mb-4">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-green-500/10">
-                          <FileText className="h-10 w-10 text-green-600 dark:text-green-400" />
-                        </div>
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                        No receipts found
-                      </h3>
-                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                        Get started by creating your first receipt.
-                      </p>
-                      <div className="mt-6">
-                        <Link to="/operations/receipts/new">
-                          <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-105">
-                            <Plus className="h-5 w-5" />
-                            New Receipt
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                  {receipts.map((receipt, index) => {
+                    const statusConfig = getStatusConfig(receipt.status)
+                    return (
+                      <tr 
+                        key={receipt._id} 
+                        className="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors animate-fade-in"
+                        style={{ animationDelay: `${0.05 * index}s` }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                              <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {receipt.reference || receipt.receiptNumber}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {receipt.supplier?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {receipt.warehouse?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.text.replace('text-', 'bg-')}`} />
+                            {statusConfig.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          {new Date(receipt.scheduledDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">
+                          ${receipt.totalValue?.toFixed(2) || '0.00'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <Link to={`/operations/receipts/${receipt._id}`}>
+                            <button className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 font-medium text-sm transition-all group-hover:scale-105">
+                              <Eye className="h-4 w-4" />
+                              View
+                              <ArrowRight className="h-3 w-3 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                            </button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/10 mb-4">
+                <FileText className="h-10 w-10 text-green-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                No receipts found
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">
+                Get started by creating your first receipt
+              </p>
+              <Link to="/operations/receipts/new">
+                <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-105">
+                  <Plus className="h-5 w-5" />
+                  Create Receipt
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
-      </div>
       </div>
     </div>
   )

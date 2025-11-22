@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Transfer = require('../models/Transfer');
 const StockMove = require('../models/StockMove');
+const Product = require('../models/Product');
 const { auth, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -21,7 +22,6 @@ router.get('/', auth, async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     const transfers = await Transfer.find(query)
-      .populate('sourceLocation destinationLocation', 'name shortCode warehouse')
       .populate('products.product', 'name sku')
       .populate('createdBy responsible', 'name email')
       .sort({ createdAt: -1 })
@@ -54,17 +54,17 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.post('/', auth, [
   body('sourceLocation')
-    .isMongoId()
-    .withMessage('Valid source location ID is required'),
+    .notEmpty()
+    .withMessage('Source location is required'),
   body('destinationLocation')
-    .isMongoId()
-    .withMessage('Valid destination location ID is required'),
+    .notEmpty()
+    .withMessage('Destination location is required'),
   body('products')
     .isArray({ min: 1 })
     .withMessage('At least one product is required'),
   body('products.*.product')
-    .isMongoId()
-    .withMessage('Valid product ID is required'),
+    .notEmpty()
+    .withMessage('Product is required'),
   body('products.*.quantity')
     .isFloat({ gt: 0 })
     .withMessage('Quantity must be greater than 0')
@@ -86,12 +86,37 @@ router.post('/', auth, [
       });
     }
 
+    // Convert product SKUs to ObjectIds
+    const productPromises = req.body.products.map(async (item) => {
+      let productId = item.product;
+      
+      // Check if it's a MongoDB ObjectId or SKU
+      if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
+        // It's a SKU, find the product
+        const product = await Product.findOne({ sku: productId.toUpperCase() });
+        if (!product) {
+          throw new Error(`Product with SKU ${productId} not found`);
+        }
+        productId = product._id;
+      }
+      
+      return {
+        product: productId,
+        quantity: item.quantity,
+        transferredQuantity: item.transferredQuantity || 0,
+        notes: item.notes
+      };
+    });
+
+    const products = await Promise.all(productPromises);
+
     const transfer = await Transfer.create({
       ...req.body,
+      products,
       createdBy: req.user.id
     });
 
-    await transfer.populate('sourceLocation destinationLocation products.product createdBy');
+    await transfer.populate('products.product createdBy');
 
     res.status(201).json({
       success: true,
@@ -113,7 +138,6 @@ router.post('/', auth, [
 router.get('/:id', auth, async (req, res) => {
   try {
     const transfer = await Transfer.findById(req.params.id)
-      .populate('sourceLocation destinationLocation', 'name shortCode address warehouse')
       .populate('products.product', 'name sku unitOfMeasure')
       .populate('createdBy responsible', 'name email');
 
@@ -177,7 +201,7 @@ router.put('/:id', auth, [
 
     Object.assign(transfer, req.body);
     await transfer.save();
-    await transfer.populate('sourceLocation destinationLocation products.product createdBy');
+    await transfer.populate('products.product createdBy');
 
     res.status(200).json({
       success: true,

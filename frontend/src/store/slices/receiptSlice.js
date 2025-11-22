@@ -91,65 +91,106 @@ const receiptSlice = createSlice({
     },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload }
+    },
+    clearCurrentReceipt: (state) => {
+      state.currentReceipt = null
     }
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Receipts
       .addCase(fetchReceipts.pending, (state) => {
         state.isLoading = true
         state.error = null
       })
       .addCase(fetchReceipts.fulfilled, (state, action) => {
         state.isLoading = false
+        // Handle both response formats: action.payload.data or action.payload.receipts
         state.items = action.payload.data || action.payload.receipts || []
-        state.pagination = action.payload.pagination || {
-          page: action.payload.page || 1,
-          limit: action.payload.limit || 20,
-          totalItems: action.payload.totalItems || 0,
-          totalPages: action.payload.totalPages || 0
+        
+        // Handle pagination from different response formats
+        if (action.payload.pagination) {
+          state.pagination = {
+            page: action.payload.pagination.current || action.payload.pagination.page || 1,
+            limit: action.payload.pagination.limit || 20,
+            totalItems: action.payload.pagination.totalItems || 0,
+            totalPages: action.payload.pagination.total || action.payload.pagination.totalPages || 0
+          }
+        } else {
+          // Fallback for direct pagination fields
+          state.pagination = {
+            page: action.payload.page || 1,
+            limit: action.payload.limit || 20,
+            totalItems: action.payload.totalItems || state.items.length,
+            totalPages: action.payload.totalPages || Math.ceil((action.payload.totalItems || state.items.length) / 20)
+          }
         }
       })
       .addCase(fetchReceipts.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload
+        state.items = []
       })
       
+      // Fetch Single Receipt
+      .addCase(fetchReceipt.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
       .addCase(fetchReceipt.fulfilled, (state, action) => {
+        state.isLoading = false
+        // Handle multiple response formats
         state.currentReceipt = action.payload.data || action.payload.receipt || action.payload
       })
+      .addCase(fetchReceipt.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload
+        state.currentReceipt = null
+      })
       
+      // Create Receipt
       .addCase(createReceipt.pending, (state) => {
         state.isCreating = true
         state.error = null
       })
       .addCase(createReceipt.fulfilled, (state, action) => {
         state.isCreating = false
-        const receipt = action.payload.data || action.payload.receipt || action.payload
-        state.items.unshift(receipt)
+        // Handle multiple response formats
+        const newReceipt = action.payload.data || action.payload.receipt || action.payload
+        state.items.unshift(newReceipt)
+        state.pagination.totalItems += 1
       })
       .addCase(createReceipt.rejected, (state, action) => {
         state.isCreating = false
         state.error = action.payload
       })
       
+      // Update Receipt
       .addCase(updateReceipt.pending, (state) => {
         state.isUpdating = true
         state.error = null
       })
       .addCase(updateReceipt.fulfilled, (state, action) => {
         state.isUpdating = false
-        const receipt = action.payload.data || action.payload.receipt || action.payload
-        const index = state.items.findIndex(item => item._id === receipt._id)
+        // Handle multiple response formats
+        const updatedReceipt = action.payload.data || action.payload.receipt || action.payload
+        
+        const index = state.items.findIndex(item => item._id === updatedReceipt._id)
         if (index !== -1) {
-          state.items[index] = receipt
+          state.items[index] = updatedReceipt
         }
-        state.currentReceipt = receipt
+        
+        // Update current receipt if it matches
+        if (state.currentReceipt?._id === updatedReceipt._id) {
+          state.currentReceipt = updatedReceipt
+        }
       })
       .addCase(updateReceipt.rejected, (state, action) => {
         state.isUpdating = false
         state.error = action.payload
       })
       
+      // Delete Receipt
       .addCase(deleteReceipt.pending, (state) => {
         state.isDeleting = true
         state.error = null
@@ -157,6 +198,9 @@ const receiptSlice = createSlice({
       .addCase(deleteReceipt.fulfilled, (state, action) => {
         state.isDeleting = false
         state.items = state.items.filter(item => item._id !== action.payload._id)
+        state.pagination.totalItems = Math.max(0, state.pagination.totalItems - 1)
+        
+        // Clear current receipt if deleted
         if (state.currentReceipt?._id === action.payload._id) {
           state.currentReceipt = null
         }
@@ -168,5 +212,5 @@ const receiptSlice = createSlice({
   }
 })
 
-export const { clearError, setFilters } = receiptSlice.actions
+export const { clearError, setFilters, clearCurrentReceipt } = receiptSlice.actions
 export default receiptSlice.reducer

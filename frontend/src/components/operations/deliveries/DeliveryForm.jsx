@@ -26,16 +26,39 @@ const DeliveryForm = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      items: [{ product: '', quantity: 0, unitPrice: 0 }]
+      customer: {
+        name: '',
+        email: '',
+        phone: '',
+        address: ''
+      },
+      warehouse: '',
+      sourceLocation: '',
+      scheduledDate: '',
+      reference: '',
+      notes: '',
+      products: [{ product: '', requestedQuantity: 0, unitPrice: 0 }]
     }
   })
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'items'
+    name: 'products'
   })
 
-  const watchedItems = watch('items')
+  const watchedProducts = watch('products')
+  const watchedWarehouse = watch('warehouse')
+
+  // Mock locations based on selected warehouse
+  const getLocations = () => {
+    if (!watchedWarehouse) return []
+    return [
+      { id: `${watchedWarehouse}_storage`, name: 'Storage' },
+      { id: `${watchedWarehouse}_picking`, name: 'Picking' },
+      { id: `${watchedWarehouse}_packing`, name: 'Packing' },
+      { id: `${watchedWarehouse}_shipping`, name: 'Shipping' }
+    ]
+  }
 
   useEffect(() => {
     dispatch(fetchWarehouses())
@@ -45,21 +68,50 @@ const DeliveryForm = () => {
     }
   }, [dispatch, id, isEditing])
 
+  useEffect(() => {
+    if (isEditing && currentDelivery) {
+      reset({
+        customer: {
+          name: currentDelivery.customer?.name || '',
+          email: currentDelivery.customer?.email || '',
+          phone: currentDelivery.customer?.phone || '',
+          address: currentDelivery.customer?.address || ''
+        },
+        warehouse: currentDelivery.warehouse?._id || currentDelivery.warehouse || '',
+        sourceLocation: currentDelivery.sourceLocation || '',
+        scheduledDate: currentDelivery.scheduledDate?.split('T')[0] || '',
+        reference: currentDelivery.reference || '',
+        notes: currentDelivery.notes || '',
+        products: currentDelivery.products || [{ product: '', requestedQuantity: 0, unitPrice: 0 }]
+      })
+    }
+  }, [currentDelivery, isEditing, reset])
+
   const calculateTotal = () => {
-    return watchedItems?.reduce((total, item) => {
-      return total + (parseFloat(item.quantity || 0) * parseFloat(item.unitPrice || 0))
+    return watchedProducts?.reduce((total, item) => {
+      return total + (parseFloat(item.requestedQuantity || 0) * parseFloat(item.unitPrice || 0))
     }, 0) || 0
   }
 
   const onSubmit = async (data) => {
     try {
       const formattedData = {
-        ...data,
-        totalValue: calculateTotal(),
-        items: data.items.map(item => ({
-          ...item,
-          quantity: parseFloat(item.quantity),
-          unitPrice: parseFloat(item.unitPrice)
+        reference: data.reference,
+        customer: {
+          name: data.customer.name,
+          email: data.customer.email,
+          phone: data.customer.phone,
+          address: data.customer.address
+        },
+        warehouse: data.warehouse,
+        sourceLocation: data.sourceLocation,
+        scheduledDate: data.scheduledDate,
+        notes: data.notes,
+        products: data.products.map(item => ({
+          product: item.product,
+          requestedQuantity: parseFloat(item.requestedQuantity),
+          unitPrice: parseFloat(item.unitPrice || 0),
+          notes: item.notes || ''
         }))
       }
 
@@ -72,7 +124,7 @@ const DeliveryForm = () => {
       }
       navigate('/operations/deliveries')
     } catch (error) {
-      toast.error(error || 'Something went wrong')
+      toast.error(error?.message || 'Something went wrong')
     }
   }
 
@@ -84,6 +136,7 @@ const DeliveryForm = () => {
       </div>
 
       <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        {/* Header */}
         <div className="flex items-center gap-3 animate-fade-in">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/30">
             <Truck className="h-6 w-6 text-white" />
@@ -99,12 +152,13 @@ const DeliveryForm = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Customer & Delivery Information */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
                 <span className="text-purple-600 dark:text-purple-400 text-sm font-bold">1</span>
               </span>
-              Delivery Information
+              Customer & Delivery Information
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -115,9 +169,42 @@ const DeliveryForm = () => {
                 <input
                   type="text"
                   className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                  {...register('customer', { required: 'Customer name is required' })}
+                  {...register('customer.name', { required: 'Customer name is required' })}
                 />
-                {errors.customer && <p className="mt-1 text-sm text-red-500">{errors.customer.message}</p>}
+                {errors.customer?.name && <p className="mt-1 text-sm text-red-500">{errors.customer.name.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Customer Email
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  {...register('customer.email')}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Customer Phone
+                </label>
+                <input
+                  type="tel"
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  {...register('customer.phone')}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Customer Address
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  {...register('customer.address')}
+                />
               </div>
 
               <div>
@@ -140,6 +227,24 @@ const DeliveryForm = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Source Location <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  {...register('sourceLocation', { required: 'Source location is required' })}
+                >
+                  <option value="">Select location</option>
+                  {getLocations().map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.sourceLocation && <p className="mt-1 text-sm text-red-500">{errors.sourceLocation.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Scheduled Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -152,60 +257,105 @@ const DeliveryForm = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Reference
+                  Reference <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  placeholder="e.g., DEL-001"
                   className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                  {...register('reference')}
+                  {...register('reference', { required: 'Reference is required' })}
                 />
+                {errors.reference && <p className="mt-1 text-sm text-red-500">{errors.reference.message}</p>}
               </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Notes
+              </label>
+              <textarea
+                rows="3"
+                className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none"
+                placeholder="Additional delivery notes..."
+                {...register('notes')}
+              />
             </div>
           </div>
 
+          {/* Products Section */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
                   <span className="text-purple-600 dark:text-purple-400 text-sm font-bold">2</span>
                 </span>
-                Items
+                Products
               </h3>
               <button
                 type="button"
-                onClick={() => append({ product: '', quantity: 0, unitPrice: 0 })}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium transition-all"
+                onClick={() => append({ product: '', requestedQuantity: 0, unitPrice: 0 })}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium text-sm transition-all"
               >
-                <Plus className="h-5 w-5" />
-                Add Item
+                <Plus className="h-4 w-4" />
+                Add Product
               </button>
             </div>
 
             <div className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="group p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 transition-all">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div key={field.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-5 w-5 text-slate-400" />
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Product {index + 1}
+                      </span>
+                    </div>
+                    {fields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Product Name <span className="text-red-500">*</span>
+                        Product SKU <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        {...register(`items.${index}.product`, { required: 'Product is required' })}
+                        placeholder="e.g., IPH15PM256"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        {...register(`products.${index}.product`, {
+                          required: 'Product is required'
+                        })}
                       />
+                      {errors.products?.[index]?.product && (
+                        <p className="mt-1 text-sm text-red-500">{errors.products[index].product.message}</p>
+                      )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Quantity <span className="text-red-500">*</span>
+                        Requested Qty <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
                         min="1"
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        {...register(`items.${index}.quantity`, { required: 'Quantity is required' })}
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        {...register(`products.${index}.requestedQuantity`, {
+                          required: 'Quantity is required',
+                          min: { value: 1, message: 'Quantity must be at least 1' }
+                        })}
                       />
+                      {errors.products?.[index]?.requestedQuantity && (
+                        <p className="mt-1 text-sm text-red-500">{errors.products[index].requestedQuantity.message}</p>
+                      )}
                     </div>
 
                     <div>
@@ -216,26 +366,24 @@ const DeliveryForm = () => {
                         type="number"
                         step="0.01"
                         min="0"
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        {...register(`items.${index}.unitPrice`, { required: 'Unit price is required' })}
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                        {...register(`products.${index}.unitPrice`, {
+                          required: 'Unit price is required',
+                          min: { value: 0, message: 'Price cannot be negative' }
+                        })}
                       />
+                      {errors.products?.[index]?.unitPrice && (
+                        <p className="mt-1 text-sm text-red-500">{errors.products[index].unitPrice.message}</p>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Total: <span className="text-purple-600 dark:text-purple-400">
-                          ${((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0)).toFixed(2)}
-                        </span>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Total
+                      </label>
+                      <div className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold">
+                        ${((watchedProducts?.[index]?.requestedQuantity || 0) * (watchedProducts?.[index]?.unitPrice || 0)).toFixed(2)}
                       </div>
-                      {fields.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -247,8 +395,8 @@ const DeliveryForm = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
                   <Package className="h-8 w-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No items added yet</p>
-                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Click "Add Item" to get started</p>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">No products added yet</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Click "Add Product" to get started</p>
               </div>
             )}
 
@@ -262,6 +410,7 @@ const DeliveryForm = () => {
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center justify-end gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <button
               type="button"

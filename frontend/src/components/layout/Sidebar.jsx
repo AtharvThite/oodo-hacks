@@ -11,6 +11,8 @@ import {
   LogOut,
   X,
   Warehouse,
+  BarChart3,
+  Settings,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -27,6 +29,14 @@ const navigation = [
       { name: 'Internal Transfers', href: '/operations/transfers' },
       { name: 'Adjustments', href: '/operations/adjustments' },
       { name: 'Move History', href: '/operations/move-history' },
+    ],
+  },
+  { name: 'Reports', href: '/reports', icon: BarChart3 },
+  {
+    name: 'Settings',
+    icon: Settings,
+    children: [
+      { name: 'Warehouses', href: '/settings/warehouses' },
     ],
   },
 ]

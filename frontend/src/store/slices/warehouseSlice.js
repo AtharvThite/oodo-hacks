@@ -125,12 +125,13 @@ const warehouseSlice = createSlice({
       })
       .addCase(fetchWarehouses.fulfilled, (state, action) => {
         state.isLoading = false
-        state.items = action.payload.warehouses || action.payload || []
+        // Handle both array response and object response
+        state.items = Array.isArray(action.payload) ? action.payload : (action.payload.warehouses || [])
         state.pagination = {
           page: action.payload.page || 1,
           limit: action.payload.limit || 20,
-          totalItems: action.payload.totalItems || 0,
-          totalPages: action.payload.totalPages || 0
+          totalItems: action.payload.totalItems || state.items.length,
+          totalPages: action.payload.totalPages || 1
         }
       })
       .addCase(fetchWarehouses.rejected, (state, action) => {

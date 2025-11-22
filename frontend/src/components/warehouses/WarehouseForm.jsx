@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { createWarehouse, updateWarehouse, fetchWarehouse } from '../../store/slices/warehouseSlice'
-import { Warehouse, MapPin, User, Phone, Mail } from 'lucide-react'
+import { Warehouse, MapPin } from 'lucide-react'
 
 const WarehouseForm = () => {
   const navigate = useNavigate()
@@ -20,7 +20,14 @@ const WarehouseForm = () => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm()
+  } = useForm({
+    defaultValues: {
+      name: '',
+      shortCode: '',
+      address: '',
+      isActive: true
+    }
+  })
 
   useEffect(() => {
     if (isEditing && id) {
@@ -29,11 +36,8 @@ const WarehouseForm = () => {
       // Clear form when creating new warehouse
       reset({
         name: '',
-        code: '',
+        shortCode: '',
         address: '',
-        manager: '',
-        phone: '',
-        email: '',
         isActive: true
       })
     }
@@ -43,11 +47,8 @@ const WarehouseForm = () => {
     if (isEditing && currentWarehouse) {
       reset({
         name: currentWarehouse.name || '',
-        code: currentWarehouse.code || '',
+        shortCode: currentWarehouse.shortCode || '',
         address: currentWarehouse.address || '',
-        manager: currentWarehouse.manager || '',
-        phone: currentWarehouse.phone || '',
-        email: currentWarehouse.email || '',
         isActive: currentWarehouse.isActive !== undefined ? currentWarehouse.isActive : true
       })
     }
@@ -64,7 +65,7 @@ const WarehouseForm = () => {
       }
       navigate('/warehouses')
     } catch (error) {
-      toast.error(error || 'Something went wrong')
+      toast.error(error?.message || 'Something went wrong')
     }
   }
 
@@ -76,7 +77,7 @@ const WarehouseForm = () => {
         <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-orange-500/5 dark:bg-orange-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+      <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 animate-fade-in">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30">
@@ -99,7 +100,7 @@ const WarehouseForm = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
                 <span className="text-amber-600 dark:text-amber-400 text-sm font-bold">1</span>
               </span>
-              Basic Information
+              Warehouse Information
             </h3>
 
             <div className="space-y-6">
@@ -110,6 +111,7 @@ const WarehouseForm = () => {
                   </label>
                   <input
                     type="text"
+                    placeholder="e.g., Main Warehouse"
                     className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                     {...register('name', {
                       required: 'Warehouse name is required'
@@ -120,20 +122,31 @@ const WarehouseForm = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Warehouse Code <span className="text-red-500">*</span>
+                    Short Code <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                    {...register('code', {
-                      required: 'Warehouse code is required',
+                    placeholder="e.g., WH1, MAIN"
+                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all uppercase"
+                    {...register('shortCode', {
+                      required: 'Short code is required',
                       pattern: {
-                        value: /^[A-Z0-9-_]+$/,
-                        message: 'Code can only contain uppercase letters, numbers, hyphens, and underscores'
+                        value: /^[A-Z0-9]+$/,
+                        message: 'Code can only contain uppercase letters and numbers'
+                      },
+                      maxLength: {
+                        value: 10,
+                        message: 'Code cannot exceed 10 characters'
                       }
                     })}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.toUpperCase()
+                    }}
                   />
-                  {errors.code && <p className="mt-1 text-sm text-red-500">{errors.code.message}</p>}
+                  {errors.shortCode && <p className="mt-1 text-sm text-red-500">{errors.shortCode.message}</p>}
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Max 10 characters. Uppercase letters and numbers only.
+                  </p>
                 </div>
               </div>
 
@@ -151,92 +164,28 @@ const WarehouseForm = () => {
                   />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Contact Information */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                <User className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              </span>
-              Contact Information
-            </h3>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Manager Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="text"
-                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                      placeholder="Enter manager name"
-                      {...register('manager')}
-                    />
-                  </div>
-                  {errors.manager && <p className="mt-1 text-sm text-red-500">{errors.manager.message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Phone
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="tel"
-                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                      placeholder="Enter phone number"
-                      {...register('phone')}
-                    />
-                  </div>
-                  {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="email"
-                      className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                      placeholder="Enter email address"
-                      {...register('email', {
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Invalid email address'
-                        }
-                      })}
-                    />
-                  </div>
-                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
-                </div>
-
-                <div className="flex items-center">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      id="isActive"
-                      type="checkbox"
-                      className="h-5 w-5 text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 rounded transition-colors"
-                      {...register('isActive')}
-                    />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Active Warehouse
-                    </span>
-                  </label>
-                </div>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+                <input
+                  id="isActive"
+                  type="checkbox"
+                  className="h-5 w-5 text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 rounded transition-colors cursor-pointer"
+                  {...register('isActive')}
+                />
+                <label htmlFor="isActive" className="flex-1 cursor-pointer">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                    Active Warehouse
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    Inactive warehouses won't be available for operations
+                  </span>
+                </label>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center justify-end gap-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <button
               type="button"
               onClick={() => navigate('/warehouses')}

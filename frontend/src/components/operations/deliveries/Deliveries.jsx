@@ -36,11 +36,36 @@ const Deliveries = () => {
 
   const getStatusConfig = (status) => {
     const configs = {
-      draft: { bg: 'bg-slate-500/10', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-500/20', label: 'Draft' },
-      confirmed: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/20', label: 'Confirmed' },
-      shipped: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20', label: 'Shipped' },
-      delivered: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', border: 'border-green-500/20', label: 'Delivered' },
-      cancelled: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/20', label: 'Cancelled' }
+      draft: { 
+        bg: 'bg-slate-500/10', 
+        text: 'text-slate-600 dark:text-slate-400', 
+        border: 'border-slate-500/20', 
+        label: 'Draft' 
+      },
+      waiting: { 
+        bg: 'bg-yellow-500/10', 
+        text: 'text-yellow-600 dark:text-yellow-400', 
+        border: 'border-yellow-500/20', 
+        label: 'Waiting' 
+      },
+      ready: { 
+        bg: 'bg-blue-500/10', 
+        text: 'text-blue-600 dark:text-blue-400', 
+        border: 'border-blue-500/20', 
+        label: 'Ready' 
+      },
+      done: { 
+        bg: 'bg-green-500/10', 
+        text: 'text-green-600 dark:text-green-400', 
+        border: 'border-green-500/20', 
+        label: 'Done' 
+      },
+      cancelled: { 
+        bg: 'bg-red-500/10', 
+        text: 'text-red-600 dark:text-red-400', 
+        border: 'border-red-500/20', 
+        label: 'Cancelled' 
+      }
     }
     return configs[status] || configs.draft
   }
@@ -64,6 +89,7 @@ const Deliveries = () => {
       </div>
 
       <div className="relative space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
           <div>
             <div className="flex items-center gap-3">
@@ -84,6 +110,7 @@ const Deliveries = () => {
           </Link>
         </div>
 
+        {/* Filters */}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center gap-2 mb-4">
             <Filter className="h-5 w-5 text-slate-400" />
@@ -111,9 +138,9 @@ const Deliveries = () => {
             >
               <option value="">All Status</option>
               <option value="draft">Draft</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
+              <option value="waiting">Waiting</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
               <option value="cancelled">Cancelled</option>
             </select>
             <div className="flex items-center">
@@ -165,7 +192,7 @@ const Deliveries = () => {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {delivery.deliveryNumber}
+                            {delivery.reference || delivery.deliveryNumber}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">

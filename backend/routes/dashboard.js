@@ -1,10 +1,11 @@
 const express = require('express');
 const Product = require('../models/Product');
-const StockMove = require('../models/StockMove');
 const Receipt = require('../models/Receipt');
 const Delivery = require('../models/Delivery');
 const Transfer = require('../models/Transfer');
+const StockMove = require('../models/StockMove');
 const { auth } = require('../middleware/auth');
+const { calculateCurrentStock } = require('../services/stockCalculationService');
 
 const router = express.Router();
 
@@ -23,19 +24,7 @@ router.get('/kpis', auth, async (req, res) => {
     let outOfStockCount = 0;
 
     for (const product of products) {
-      const stockMoves = await StockMove.find({
-        product: product._id,
-        status: 'done'
-      });
-
-      let currentStock = 0;
-      stockMoves.forEach(move => {
-        if (move.moveType === 'in') {
-          currentStock += move.quantity;
-        } else if (move.moveType === 'out') {
-          currentStock -= move.quantity;
-        }
-      });
+      const currentStock = await calculateCurrentStock(product._id);
 
       totalInStock += currentStock;
 
@@ -158,19 +147,7 @@ router.get('/alerts', auth, async (req, res) => {
     const alerts = [];
 
     for (const product of products) {
-      const stockMoves = await StockMove.find({
-        product: product._id,
-        status: 'done'
-      });
-
-      let currentStock = 0;
-      stockMoves.forEach(move => {
-        if (move.moveType === 'in') {
-          currentStock += move.quantity;
-        } else if (move.moveType === 'out') {
-          currentStock -= move.quantity;
-        }
-      });
+      const currentStock = await calculateCurrentStock(product._id);
 
       if (currentStock <= product.reorderPoint) {
         alerts.push({
@@ -228,7 +205,16 @@ router.get('/move-history', auth, async (req, res) => {
 
     const moves = await StockMove.find(query)
       .populate('product', 'name sku')
-      .populate('sourceLocation destinationLocation', 'name shortCode warehouse')
+      .populate({
+        path: 'sourceLocation',
+        select: 'name code warehouse',
+        strictPopulate: false
+      })
+      .populate({
+        path: 'destinationLocation',
+        select: 'name code warehouse',
+        strictPopulate: false
+      })
       .populate('createdBy', 'name email')
       .sort({ completedDate: -1, createdAt: -1 })
       .limit(limit * 1)

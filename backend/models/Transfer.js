@@ -8,13 +8,11 @@ const transferSchema = new mongoose.Schema({
     trim: true
   },
   sourceLocation: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
+    type: String,
     required: [true, 'Source location is required']
   },
   destinationLocation: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
+    type: String,
     required: [true, 'Destination location is required']
   },
   scheduledDate: {

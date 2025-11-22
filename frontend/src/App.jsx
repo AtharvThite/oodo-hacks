@@ -25,6 +25,7 @@ import TransferDetail from './components/operations/transfers/TransferDetail'
 import Adjustments from './components/operations/adjustments/Adjustments'
 import AdjustmentForm from './components/operations/adjustments/AdjustmentForm'
 import MoveHistory from './components/operations/MoveHistory'
+import Reports from './components/reports/Reports'
 import Warehouses from './components/warehouses/Warehouses'
 import WarehouseForm from './components/warehouses/WarehouseForm'
 import Profile from './components/profile/Profile'
@@ -53,7 +54,6 @@ function App() {
   return (
     <div className="App">
       <Routes>
-
         {/* Public Routes */}
         <Route
           path="/"
@@ -95,6 +95,11 @@ function App() {
                   <Route path="/products/:id" element={<ProductDetail />} />
                   <Route path="/products/:id/edit" element={<ProductForm />} />
 
+                  {/* Warehouses - Main Navigation */}
+                  <Route path="/warehouses" element={<Warehouses />} />
+                  <Route path="/warehouses/new" element={<WarehouseForm />} />
+                  <Route path="/warehouses/:id/edit" element={<WarehouseForm />} />
+
                   {/* Operations - Receipts */}
                   <Route path="/operations/receipts" element={<Receipts />} />
                   <Route path="/operations/receipts/new" element={<ReceiptForm />} />
@@ -114,20 +119,21 @@ function App() {
                   <Route path="/operations/adjustments" element={<Adjustments />} />
                   <Route path="/operations/adjustments/new" element={<AdjustmentForm />} />
 
-                  {/* Move History */}
+                  {/* Operations - Move History */}
                   <Route path="/operations/move-history" element={<MoveHistory />} />
 
-                  {/* Warehouses */}
-                  <Route path="/warehouses" element={<Warehouses />} />
-                  <Route path="/warehouses/new" element={<WarehouseForm />} />
-                  <Route path="/warehouses/:id/edit" element={<WarehouseForm />} />
+                  {/* Reports */}
+                  <Route path="/reports" element={<Reports />} />
+
+                  {/* Settings - Warehouses (Alternative path) */}
+                  <Route path="/settings/warehouses" element={<Navigate to="/warehouses" replace />} />
+                  <Route path="/settings/warehouses/new" element={<Navigate to="/warehouses/new" replace />} />
 
                   {/* Profile */}
                   <Route path="/profile" element={<Profile />} />
 
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
                 </Routes>
               </Layout>
             </ProtectedRoute>

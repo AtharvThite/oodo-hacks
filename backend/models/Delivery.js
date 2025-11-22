@@ -23,8 +23,7 @@ const deliverySchema = new mongoose.Schema({
     required: [true, 'Warehouse is required']
   },
   sourceLocation: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
+    type: String,
     required: [true, 'Source location is required']
   },
   scheduledDate: {
