@@ -43,6 +43,20 @@ export const fetchStockAlerts = createAsyncThunk(
   }
 )
 
+// Fetch move history
+export const fetchMoveHistory = createAsyncThunk(
+  'dashboard/fetchMoveHistory',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      return await dashboardService.getMoveHistory(params)
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch move history'
+      )
+    }
+  }
+)
+
 const initialState = {
   kpis: {
     inventory: {
@@ -67,6 +81,7 @@ const initialState = {
     transfers: []
   },
   alerts: [],
+  moveHistory: [],
   isLoading: false,
   error: null,
 }
@@ -101,6 +116,19 @@ const dashboardSlice = createSlice({
       // Fetch alerts
       .addCase(fetchStockAlerts.fulfilled, (state, action) => {
         state.alerts = action.payload
+      })
+      // Fetch move history
+      .addCase(fetchMoveHistory.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(fetchMoveHistory.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.moveHistory = action.payload.moves || []
+      })
+      .addCase(fetchMoveHistory.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload
       })
   },
 })

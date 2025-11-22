@@ -18,6 +18,13 @@ const dashboardService = {
     const response = await api.get('/dashboard/alerts')
     return response.data
   },
+
+  // Get move history
+  getMoveHistory: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString()
+    const response = await api.get(`/dashboard/move-history?${queryString}`)
+    return response.data
+  },
 }
 
 export default dashboardService

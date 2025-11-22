@@ -50,12 +50,25 @@ export const updateDelivery = createAsyncThunk(
   }
 )
 
+export const deleteDelivery = createAsyncThunk(
+  'deliveries/deleteDelivery',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/deliveries/${id}`)
+      return { _id: id, ...response.data }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete delivery')
+    }
+  }
+)
+
 const initialState = {
   items: [],
   currentDelivery: null,
   isLoading: false,
   isCreating: false,
   isUpdating: false,
+  isDeleting: false,
   error: null,
   pagination: {
     page: 1,
@@ -132,6 +145,22 @@ const deliverySlice = createSlice({
       })
       .addCase(updateDelivery.rejected, (state, action) => {
         state.isUpdating = false
+        state.error = action.payload
+      })
+      
+      .addCase(deleteDelivery.pending, (state) => {
+        state.isDeleting = true
+        state.error = null
+      })
+      .addCase(deleteDelivery.fulfilled, (state, action) => {
+        state.isDeleting = false
+        state.items = state.items.filter(item => item._id !== action.payload._id)
+        if (state.currentDelivery?._id === action.payload._id) {
+          state.currentDelivery = null
+        }
+      })
+      .addCase(deleteDelivery.rejected, (state, action) => {
+        state.isDeleting = false
         state.error = action.payload
       })
   }

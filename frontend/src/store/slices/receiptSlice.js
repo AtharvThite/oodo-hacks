@@ -50,12 +50,25 @@ export const updateReceipt = createAsyncThunk(
   }
 )
 
+export const deleteReceipt = createAsyncThunk(
+  'receipts/deleteReceipt',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/receipts/${id}`)
+      return { _id: id, ...response.data }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete receipt')
+    }
+  }
+)
+
 const initialState = {
   items: [],
   currentReceipt: null,
   isLoading: false,
   isCreating: false,
   isUpdating: false,
+  isDeleting: false,
   error: null,
   pagination: {
     page: 1,
@@ -132,6 +145,22 @@ const receiptSlice = createSlice({
       })
       .addCase(updateReceipt.rejected, (state, action) => {
         state.isUpdating = false
+        state.error = action.payload
+      })
+      
+      .addCase(deleteReceipt.pending, (state) => {
+        state.isDeleting = true
+        state.error = null
+      })
+      .addCase(deleteReceipt.fulfilled, (state, action) => {
+        state.isDeleting = false
+        state.items = state.items.filter(item => item._id !== action.payload._id)
+        if (state.currentReceipt?._id === action.payload._id) {
+          state.currentReceipt = null
+        }
+      })
+      .addCase(deleteReceipt.rejected, (state, action) => {
+        state.isDeleting = false
         state.error = action.payload
       })
   }

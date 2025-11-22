@@ -50,12 +50,25 @@ export const updateAdjustment = createAsyncThunk(
   }
 )
 
+export const deleteAdjustment = createAsyncThunk(
+  'adjustments/deleteAdjustment',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/adjustments/${id}`)
+      return { _id: id, ...response.data }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete adjustment')
+    }
+  }
+)
+
 const initialState = {
   items: [],
   currentAdjustment: null,
   isLoading: false,
   isCreating: false,
   isUpdating: false,
+  isDeleting: false,
   error: null,
   pagination: {
     page: 1,
@@ -132,6 +145,22 @@ const adjustmentSlice = createSlice({
       })
       .addCase(updateAdjustment.rejected, (state, action) => {
         state.isUpdating = false
+        state.error = action.payload
+      })
+      
+      .addCase(deleteAdjustment.pending, (state) => {
+        state.isDeleting = true
+        state.error = null
+      })
+      .addCase(deleteAdjustment.fulfilled, (state, action) => {
+        state.isDeleting = false
+        state.items = state.items.filter(item => item._id !== action.payload._id)
+        if (state.currentAdjustment?._id === action.payload._id) {
+          state.currentAdjustment = null
+        }
+      })
+      .addCase(deleteAdjustment.rejected, (state, action) => {
+        state.isDeleting = false
         state.error = action.payload
       })
   }

@@ -105,6 +105,134 @@ router.post('/', auth, [
   }
 });
 
+// @desc    Get single delivery
+// @route   GET /api/deliveries/:id
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id)
+      .populate('warehouse sourceLocation', 'name shortCode address')
+      .populate('products.product', 'name sku unitOfMeasure')
+      .populate('createdBy responsible', 'name email');
+
+    if (!delivery) {
+      return res.status(404).json({
+        success: false,
+        message: 'Delivery not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: delivery
+    });
+  } catch (error) {
+    console.error('Get delivery error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error retrieving delivery'
+    });
+  }
+});
+
+// @desc    Update delivery
+// @route   PUT /api/deliveries/:id
+// @access  Private
+router.put('/:id', auth, [
+  body('customer.name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Customer name cannot be empty'),
+  body('reference')
+    .optional()
+    .trim(),
+  body('scheduledDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Valid date is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const delivery = await Delivery.findById(req.params.id);
+
+    if (!delivery) {
+      return res.status(404).json({
+        success: false,
+        message: 'Delivery not found'
+      });
+    }
+
+    if (delivery.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update delivery that is not in draft status'
+      });
+    }
+
+    Object.assign(delivery, req.body);
+    await delivery.save();
+    await delivery.populate('warehouse sourceLocation products.product createdBy');
+
+    res.status(200).json({
+      success: true,
+      message: 'Delivery updated successfully',
+      data: delivery
+    });
+  } catch (error) {
+    console.error('Update delivery error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating delivery'
+    });
+  }
+});
+
+// @desc    Delete delivery
+// @route   DELETE /api/deliveries/:id
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const delivery = await Delivery.findById(req.params.id);
+
+    if (!delivery) {
+      return res.status(404).json({
+        success: false,
+        message: 'Delivery not found'
+      });
+    }
+
+    if (delivery.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete delivery that is not in draft status'
+      });
+    }
+
+    await Delivery.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Delivery deleted successfully',
+      data: { id: req.params.id }
+    });
+  } catch (error) {
+    console.error('Delete delivery error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting delivery'
+    });
+  }
+});
+
 // @desc    Validate delivery
 // @route   PUT /api/deliveries/:id/validate
 // @access  Private (Manager/Admin)

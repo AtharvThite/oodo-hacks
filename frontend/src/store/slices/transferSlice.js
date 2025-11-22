@@ -50,12 +50,25 @@ export const updateTransfer = createAsyncThunk(
   }
 )
 
+export const deleteTransfer = createAsyncThunk(
+  'transfers/deleteTransfer',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/transfers/${id}`)
+      return { _id: id, ...response.data }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete transfer')
+    }
+  }
+)
+
 const initialState = {
   items: [],
   currentTransfer: null,
   isLoading: false,
   isCreating: false,
   isUpdating: false,
+  isDeleting: false,
   error: null,
   pagination: {
     page: 1,
@@ -132,6 +145,22 @@ const transferSlice = createSlice({
       })
       .addCase(updateTransfer.rejected, (state, action) => {
         state.isUpdating = false
+        state.error = action.payload
+      })
+      
+      .addCase(deleteTransfer.pending, (state) => {
+        state.isDeleting = true
+        state.error = null
+      })
+      .addCase(deleteTransfer.fulfilled, (state, action) => {
+        state.isDeleting = false
+        state.items = state.items.filter(item => item._id !== action.payload._id)
+        if (state.currentTransfer?._id === action.payload._id) {
+          state.currentTransfer = null
+        }
+      })
+      .addCase(deleteTransfer.rejected, (state, action) => {
+        state.isDeleting = false
         state.error = action.payload
       })
   }

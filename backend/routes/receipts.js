@@ -135,6 +135,105 @@ router.post('/', auth, [
   }
 });
 
+// @desc    Update receipt
+// @route   PUT /api/receipts/:id
+// @access  Private
+router.put('/:id', auth, [
+  body('supplier.name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Supplier name cannot be empty'),
+  body('reference')
+    .optional()
+    .trim(),
+  body('expectedDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Valid date is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const receipt = await Receipt.findById(req.params.id);
+
+    if (!receipt) {
+      return res.status(404).json({
+        success: false,
+        message: 'Receipt not found'
+      });
+    }
+
+    if (receipt.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update receipt that is not in draft status'
+      });
+    }
+
+    // Update fields
+    Object.assign(receipt, req.body);
+    await receipt.save();
+    await receipt.populate('warehouse location products.product createdBy');
+
+    res.status(200).json({
+      success: true,
+      message: 'Receipt updated successfully',
+      data: receipt
+    });
+  } catch (error) {
+    console.error('Update receipt error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating receipt'
+    });
+  }
+});
+
+// @desc    Delete receipt
+// @route   DELETE /api/receipts/:id
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const receipt = await Receipt.findById(req.params.id);
+
+    if (!receipt) {
+      return res.status(404).json({
+        success: false,
+        message: 'Receipt not found'
+      });
+    }
+
+    if (receipt.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete receipt that is not in draft status'
+      });
+    }
+
+    await Receipt.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Receipt deleted successfully',
+      data: { id: req.params.id }
+    });
+  } catch (error) {
+    console.error('Delete receipt error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting receipt'
+    });
+  }
+});
+
 // @desc    Validate receipt
 // @route   PUT /api/receipts/:id/validate
 // @access  Private (Manager/Admin)

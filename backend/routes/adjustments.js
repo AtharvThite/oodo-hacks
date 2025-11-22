@@ -110,6 +110,127 @@ router.post('/', auth, authorize('admin', 'manager'), [
   }
 });
 
+// @desc    Get single adjustment
+// @route   GET /api/adjustments/:id
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const adjustment = await Adjustment.findById(req.params.id)
+      .populate('location', 'name shortCode address warehouse')
+      .populate('products.product', 'name sku unitOfMeasure')
+      .populate('createdBy responsible approvedBy', 'name email');
+
+    if (!adjustment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Adjustment not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: adjustment
+    });
+  } catch (error) {
+    console.error('Get adjustment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error retrieving adjustment'
+    });
+  }
+});
+
+// @desc    Update adjustment
+// @route   PUT /api/adjustments/:id
+// @access  Private
+router.put('/:id', auth, [
+  body('reason')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Reason cannot be empty')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const adjustment = await Adjustment.findById(req.params.id);
+
+    if (!adjustment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Adjustment not found'
+      });
+    }
+
+    if (adjustment.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update adjustment that is not in draft status'
+      });
+    }
+
+    Object.assign(adjustment, req.body);
+    await adjustment.save();
+    await adjustment.populate('location products.product createdBy');
+
+    res.status(200).json({
+      success: true,
+      message: 'Adjustment updated successfully',
+      data: adjustment
+    });
+  } catch (error) {
+    console.error('Update adjustment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating adjustment'
+    });
+  }
+});
+
+// @desc    Delete adjustment
+// @route   DELETE /api/adjustments/:id
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const adjustment = await Adjustment.findById(req.params.id);
+
+    if (!adjustment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Adjustment not found'
+      });
+    }
+
+    if (adjustment.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete adjustment that is not in draft status'
+      });
+    }
+
+    await Adjustment.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Adjustment deleted successfully',
+      data: { id: req.params.id }
+    });
+  } catch (error) {
+    console.error('Delete adjustment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting adjustment'
+    });
+  }
+});
+
 // @desc    Approve and validate adjustment
 // @route   PUT /api/adjustments/:id/approve
 // @access  Private (Admin)

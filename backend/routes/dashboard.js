@@ -203,4 +203,56 @@ router.get('/alerts', auth, async (req, res) => {
   }
 });
 
+// @desc    Get move history
+// @route   GET /api/dashboard/move-history
+// @access  Private
+router.get('/move-history', auth, async (req, res) => {
+  try {
+    const { product, location, moveType, page = 1, limit = 50 } = req.query;
+    const query = { status: 'done' };
+
+    if (product) {
+      query.product = product;
+    }
+    if (location) {
+      query.$or = [
+        { sourceLocation: location },
+        { destinationLocation: location }
+      ];
+    }
+    if (moveType) {
+      query.moveType = moveType;
+    }
+
+    const startIndex = (page - 1) * limit;
+
+    const moves = await StockMove.find(query)
+      .populate('product', 'name sku')
+      .populate('sourceLocation destinationLocation', 'name shortCode warehouse')
+      .populate('createdBy', 'name email')
+      .sort({ completedDate: -1, createdAt: -1 })
+      .limit(limit * 1)
+      .skip(startIndex);
+
+    const total = await StockMove.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: moves.length,
+      pagination: {
+        current: parseInt(page),
+        total: Math.ceil(total / limit),
+        totalItems: total
+      },
+      data: moves
+    });
+  } catch (error) {
+    console.error('Get move history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error retrieving move history'
+    });
+  }
+});
+
 module.exports = router;

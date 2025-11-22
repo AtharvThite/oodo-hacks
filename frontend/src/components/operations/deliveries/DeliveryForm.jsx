@@ -114,7 +114,7 @@ const DeliveryForm = () => {
                 })}
               >
                 <option value="">Select warehouse</option>
-                {warehouses?.map((warehouse) => (
+                {Array.isArray(warehouses) && warehouses.map((warehouse) => (
                   <option key={warehouse._id} value={warehouse._id}>
                     {warehouse.name}
                   </option>

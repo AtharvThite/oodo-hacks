@@ -107,6 +107,129 @@ router.post('/', auth, [
   }
 });
 
+// @desc    Get single transfer
+// @route   GET /api/transfers/:id
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const transfer = await Transfer.findById(req.params.id)
+      .populate('sourceLocation destinationLocation', 'name shortCode address warehouse')
+      .populate('products.product', 'name sku unitOfMeasure')
+      .populate('createdBy responsible', 'name email');
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: transfer
+    });
+  } catch (error) {
+    console.error('Get transfer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error retrieving transfer'
+    });
+  }
+});
+
+// @desc    Update transfer
+// @route   PUT /api/transfers/:id
+// @access  Private
+router.put('/:id', auth, [
+  body('reference')
+    .optional()
+    .trim(),
+  body('scheduledDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Valid date is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const transfer = await Transfer.findById(req.params.id);
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found'
+      });
+    }
+
+    if (transfer.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update transfer that is not in draft status'
+      });
+    }
+
+    Object.assign(transfer, req.body);
+    await transfer.save();
+    await transfer.populate('sourceLocation destinationLocation products.product createdBy');
+
+    res.status(200).json({
+      success: true,
+      message: 'Transfer updated successfully',
+      data: transfer
+    });
+  } catch (error) {
+    console.error('Update transfer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating transfer'
+    });
+  }
+});
+
+// @desc    Delete transfer
+// @route   DELETE /api/transfers/:id
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const transfer = await Transfer.findById(req.params.id);
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found'
+      });
+    }
+
+    if (transfer.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete transfer that is not in draft status'
+      });
+    }
+
+    await Transfer.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Transfer deleted successfully',
+      data: { id: req.params.id }
+    });
+  } catch (error) {
+    console.error('Delete transfer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting transfer'
+    });
+  }
+});
+
 // @desc    Validate transfer
 // @route   PUT /api/transfers/:id/validate
 // @access  Private (Manager/Admin)
